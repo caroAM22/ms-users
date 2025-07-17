@@ -1,10 +1,8 @@
 package com.pragma.plazacomida.infrastructure.configuration;
 
 import com.pragma.plazacomida.domain.api.IAuthServicePort;
-import com.pragma.plazacomida.domain.api.IRolServicePort;
 import com.pragma.plazacomida.domain.api.IUsuarioServicePort;
 import com.pragma.plazacomida.domain.usecase.AuthUseCase;
-import com.pragma.plazacomida.domain.usecase.RolUseCase;
 import com.pragma.plazacomida.domain.usecase.UsuarioUseCase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,11 +16,6 @@ public class BeanConfiguration {
     
     @Value("${jwt.expiration}")
     private long jwtExpiration;
-    
-    @Bean
-    public IRolServicePort rolServicePort(com.pragma.plazacomida.domain.spi.IRolPersistencePort rolPersistencePort) {
-        return new RolUseCase(rolPersistencePort);
-    }
     
     @Bean
     public IUsuarioServicePort usuarioServicePort(com.pragma.plazacomida.domain.spi.IUsuarioPersistencePort usuarioPersistencePort) {

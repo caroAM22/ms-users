@@ -23,12 +23,14 @@ El proyecto sigue la arquitectura hexagonal con las siguientes capas:
 
 ## 📋 Roles del Sistema
 
-El sistema maneja 4 roles principales:
+El sistema maneja 4 roles principales, los cuales son estáticos y no pueden ser modificados ni gestionados por API. Estos roles se crean automáticamente al iniciar la aplicación:
 
 1. **CLIENTE**: Usuario que puede realizar pedidos en los restaurantes
 2. **ADMIN**: Administrador del sistema con acceso completo
 3. **PROPIETARIO**: Propietario de restaurante que puede gestionar su establecimiento
 4. **EMPLEADO**: Empleado de restaurante que puede preparar pedidos
+
+> **Nota:** No existen endpoints para crear, eliminar o modificar roles. Los roles son fijos y se insertan automáticamente en la base de datos al iniciar el sistema.
 
 ## 🗄️ Base de Datos
 
@@ -90,11 +92,9 @@ http://localhost:8081/swagger-ui/index.html
 - `POST /api/v1/auth/login` - Iniciar sesión
 
 ### Roles
-- `GET /api/v1/roles` - Obtener todos los roles
-- `GET /api/v1/roles/{id}` - Obtener rol por ID
-- `GET /api/v1/roles/nombre/{nombre}` - Obtener rol por nombre
-- `POST /api/v1/roles` - Crear nuevo rol
-- `DELETE /api/v1/roles/{id}` - Eliminar rol
+- `GET /api/v1/roles` - Listar todos los roles (id, nombre, descripción)
+- `GET /api/v1/roles/{id}/nombre` - Obtener el nombre del rol por ID
+- `GET /api/v1/roles/{id}/descripcion` - Obtener la descripción del rol por ID
 
 ### Usuarios
 - `GET /api/v1/usuarios` - Obtener todos los usuarios
