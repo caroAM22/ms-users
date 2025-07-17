@@ -1,0 +1,13 @@
+package com.pragma.plazacomida.application.mapper;
+
+import com.pragma.plazacomida.application.dto.response.UsuarioResponseDto;
+import com.pragma.plazacomida.domain.model.UsuarioModel;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+@Mapper(componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        unmappedSourcePolicy = ReportingPolicy.IGNORE)
+public interface IUsuarioResponseMapper {
+    UsuarioResponseDto toUsuarioResponseDto(UsuarioModel usuarioModel);
+} 

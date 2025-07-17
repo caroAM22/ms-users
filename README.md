@@ -1,61 +1,167 @@
-<br />
-<div align="center">
-<h3 align="center">PRAGMA POWER-UP</h3>
-  <p align="center">
-    In this challenge you are going to design the backend of a system that centralizes the services and orders of a restaurant chain that has different branches in the city.
-  </p>
-</div>
+# Plaza Comida - Microservicio de Usuarios
 
-### Built With
+Este es el microservicio de usuarios para la aplicación Plaza Comida, desarrollado siguiendo la arquitectura hexagonal (Clean Architecture) con Spring Boot.
 
-* ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=java&logoColor=white)
-* ![Spring](https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
-* ![Gradle](https://img.shields.io/badge/Gradle-02303A.svg?style=for-the-badge&logo=Gradle&logoColor=white)
-* ![MySQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)
+## 🏗️ Arquitectura
 
+El proyecto sigue la arquitectura hexagonal con las siguientes capas:
 
-<!-- GETTING STARTED -->
-## Getting Started
+- **Domain**: Contiene la lógica de negocio, modelos y puertos
+- **Application**: Contiene los casos de uso, handlers y DTOs
+- **Infrastructure**: Contiene adaptadores, entidades y configuraciones
 
-To get a local copy up and running follow these steps.
+## 🚀 Tecnologías
 
-### Prerequisites
+- **Spring Boot 2.7.3**
+- **Spring Security** - Autenticación y autorización
+- **Spring Data JPA** - Persistencia de datos
+- **MySQL** - Base de datos
+- **MapStruct** - Mapeo de objetos
+- **Lombok** - Reducción de código boilerplate
+- **Swagger/OpenAPI** - Documentación de API
+- **JWT** - Tokens de autenticación
 
-* JDK 11 [https://jdk.java.net/java-se-ri/11](https://jdk.java.net/java-se-ri/11)
-* Gradle [https://gradle.org/install/](https://gradle.org/install/)
-* MySQL [https://dev.mysql.com/downloads/installer/](https://dev.mysql.com/downloads/installer/)
+## 📋 Roles del Sistema
 
-### Recommended Tools
-* IntelliJ Community [https://www.jetbrains.com/idea/download/](https://www.jetbrains.com/idea/download/)
-* Postman [https://www.postman.com/downloads/](https://www.postman.com/downloads/)
+El sistema maneja 4 roles principales:
 
-### Installation
+1. **CLIENTE**: Usuario que puede realizar pedidos en los restaurantes
+2. **ADMIN**: Administrador del sistema con acceso completo
+3. **PROPIETARIO**: Propietario de restaurante que puede gestionar su establecimiento
+4. **EMPLEADO**: Empleado de restaurante que puede preparar pedidos
 
-1. Clone the repo
-2. Change directory
-   ```sh
-   cd power-up-arquetipo
-   ```
-3. Create a new database in MySQL called powerup
-4. Update the database connection settings 
-   ```yml
-   # src/main/resources/application.yml   
-   spring:
-      datasource:
-          url: jdbc:mysql://localhost/powerup
-          username: root
-          password: 1234
-   ```
+## 🗄️ Base de Datos
 
-<!-- USAGE -->
-## Usage
+### Tablas principales:
 
-1. Right-click the class PowerUpApplication and choose Run
-2. Open [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html) in your web browser
+- **usuarios**: Información de usuarios del sistema
+- **roles**: Roles disponibles en el sistema
 
-<!-- ROADMAP -->
-## Tests
+### Configuración:
+- Base de datos: `plaza_comidas_usuarios`
+- Puerto: `3306`
+- Usuario: `root`
+- Contraseña: `1234`
 
-- Right-click the test folder and choose Run tests with coverage
+## 🔧 Configuración
+
+### Variables de entorno:
+```yaml
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/plaza_comidas_usuarios
+    username: root
+    password: 1234
+
+jwt:
+  secret: plazaComidasSecretKey2024ForUserMicroservice
+  expiration: 86400000 # 24 horas
+```
+
+## 🚀 Ejecución
+
+### Prerrequisitos:
+- Java 17 o superior
+- MySQL 8.0
+- Gradle
+
+### Pasos:
+1. Crear la base de datos MySQL:
+```sql
+CREATE DATABASE plaza_comidas_usuarios;
+```
+
+2. Ejecutar la aplicación:
+```bash
+./gradlew bootRun
+```
+
+3. Acceder a la documentación:
+```
+http://localhost:8081/swagger-ui/index.html
+```
+
+## 📚 Endpoints
+
+### Autenticación
+- `POST /api/v1/auth/login` - Iniciar sesión
+
+### Roles
+- `GET /api/v1/roles` - Obtener todos los roles
+- `GET /api/v1/roles/{id}` - Obtener rol por ID
+- `GET /api/v1/roles/nombre/{nombre}` - Obtener rol por nombre
+- `POST /api/v1/roles` - Crear nuevo rol
+- `DELETE /api/v1/roles/{id}` - Eliminar rol
+
+### Usuarios
+- `GET /api/v1/usuarios` - Obtener todos los usuarios
+- `GET /api/v1/usuarios/{id}` - Obtener usuario por ID
+- `GET /api/v1/usuarios/correo/{correo}` - Obtener usuario por correo
+- `GET /api/v1/usuarios/documento/{numeroDocumento}` - Obtener usuario por documento
+- `POST /api/v1/usuarios` - Crear nuevo usuario
+- `DELETE /api/v1/usuarios/{id}` - Eliminar usuario
+
+## 🔐 Seguridad
+
+- Las contraseñas se encriptan con BCrypt
+- Autenticación basada en JWT
+- CORS configurado para desarrollo
+- Endpoints de autenticación y documentación públicos
+
+## 📝 Estructura del Proyecto
+
+```
+src/main/java/com/pragma/plazacomida/
+├── application/
+│   ├── dto/
+│   │   ├── request/
+│   │   └── response/
+│   ├── handler/
+│   │   └── impl/
+│   └── mapper/
+├── domain/
+│   ├── api/
+│   ├── model/
+│   ├── spi/
+│   └── usecase/
+└── infrastructure/
+    ├── configuration/
+    ├── documentation/
+    ├── exception/
+    ├── exceptionhandler/
+    ├── input/
+    │   └── rest/
+    └── output/
+        ├── adapter/
+        ├── entity/
+        ├── mapper/
+        └── repository/
+```
+
+## 🧪 Testing
+
+Ejecutar tests:
+```bash
+./gradlew test
+```
+
+## 📦 Build
+
+Generar JAR:
+```bash
+./gradlew build
+```
+
+## 🔄 Próximos Pasos
+
+Este microservicio está preparado para integrarse con otros microservicios de la plaza de comidas:
+- Microservicio de Restaurantes
+- Microservicio de Pedidos
+- Microservicio de Platos
+
+Cada historia de usuario (HU) se desarrollará en una rama separada siguiendo Git Flow.
 
 
