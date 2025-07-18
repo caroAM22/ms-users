@@ -36,20 +36,9 @@ El sistema maneja 4 roles principales, los cuales son estáticos y no pueden ser
 
 ### Tablas principales:
 
-- **usuarios**: Información de usuarios del sistema
+- **users**: Información de usuarios del sistema
 - **roles**: Roles disponibles en el sistema
 
-
-## 🔧 Configuración
-
-### Variables de entorno:
-
-Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
-
-jwt:
-  secret: plazaComidasSecretKey2024ForUserMicroservice
-  expiration: 86400000 # 24 horas
-```
 
 ## 🚀 Ejecución
 
