@@ -1,5 +1,6 @@
 package com.pragma.plazacomida.infrastructure.input.rest;
 
+import com.pragma.plazacomida.domain.api.IRoleValidationServicePort;
 import com.pragma.plazacomida.infrastructure.output.entity.RoleEntity;
 import com.pragma.plazacomida.infrastructure.output.repository.IRoleRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class RoleRestController {
     private final IRoleRepository roleRepository;
+    private final IRoleValidationServicePort roleValidationServicePort;
 
     @Operation(summary = "Get role name by ID")
     @ApiResponses(value = {
@@ -46,5 +48,20 @@ public class RoleRestController {
     @GetMapping
     public ResponseEntity<java.util.List<RoleEntity>> getAllRoles() {
         return ResponseEntity.ok(roleRepository.findAll());
+    }
+    
+    @Operation(summary = "Get role ID by name")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Role ID found"),
+            @ApiResponse(responseCode = "404", description = "Role not found")
+    })
+    @GetMapping("/name/{name}/id")
+    public ResponseEntity<Long> getRoleIdByName(@PathVariable String name) {
+        try {
+            Long roleId = roleValidationServicePort.getRoleIdByName(name);
+            return ResponseEntity.ok(roleId);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 } 

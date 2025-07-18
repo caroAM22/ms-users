@@ -73,6 +73,7 @@ http://localhost:8081/swagger-ui/index.html
 - `GET /api/v1/roles` - Listar todos los roles (id, nombre, descripción)
 - `GET /api/v1/roles/{id}/name` - Obtener el nombre del rol por ID
 - `GET /api/v1/roles/{id}/description` - Obtener la descripción del rol por ID
+- `GET /api/v1/roles/name/{name}/id` - Obtener el ID del rol por nombre
 
 ### Usuarios
 - `GET /api/v1/users` - Obtener todos los usuarios

@@ -18,5 +18,4 @@ public class UserResponseDto {
     private LocalDate birthDate;
     private String email;
     private Long roleId;
-    private RoleResponseDto role;
 } 
