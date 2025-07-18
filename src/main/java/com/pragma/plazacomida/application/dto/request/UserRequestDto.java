@@ -32,15 +32,14 @@ public class UserRequestDto {
     private LocalDate birthDate;
     
     @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @Pattern(
+        regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+        message = "Invalid email format"
+    )
     @Size(max = 100, message = "Email cannot exceed 100 characters")
     private String email;
     
     @NotBlank(message = "Password is required")
     @Size(min = 6, max = 100, message = "Password must have between 6 and 100 characters")
     private String password;
-    
-    @NotNull(message = "Role is required")
-    @Min(value = 1, message = "Role ID must be greater than 0")
-    private Long roleId;
 } 
