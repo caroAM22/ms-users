@@ -1,24 +1,23 @@
 package com.pragma.plazacomida.infrastructure.output.entity;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
-@Table(name = "roles")
-@Data
-@NoArgsConstructor
+@Table(name = "objects")
+@Getter
+@Setter
 @AllArgsConstructor
-public class RolEntity {
+@NoArgsConstructor
+public class ObjectEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "nombre", nullable = false, unique = true)
-    private String nombre;
-    
-    @Column(name = "descripcion")
-    private String descripcion;
+    @Column(name = "name", nullable = false)
+    private String name;
 } 

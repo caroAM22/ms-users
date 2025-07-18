@@ -39,24 +39,12 @@ El sistema maneja 4 roles principales, los cuales son estáticos y no pueden ser
 - **usuarios**: Información de usuarios del sistema
 - **roles**: Roles disponibles en el sistema
 
-### Configuración:
-- Base de datos: `plaza_comidas_usuarios`
-- Puerto: `3306`
-- Usuario: `root`
-- Contraseña: `1234`
 
 ## 🔧 Configuración
 
 ### Variables de entorno:
-```yaml
-server:
-  port: 8081
 
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/plaza_comidas_usuarios
-    username: root
-    password: 1234
+Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 jwt:
   secret: plazaComidasSecretKey2024ForUserMicroservice
@@ -73,7 +61,7 @@ jwt:
 ### Pasos:
 1. Crear la base de datos MySQL:
 ```sql
-CREATE DATABASE plaza_comidas_usuarios;
+CREATE DATABASE users;
 ```
 
 2. Ejecutar la aplicación:
@@ -90,19 +78,24 @@ http://localhost:8081/swagger-ui/index.html
 
 ### Autenticación
 - `POST /api/v1/auth/login` - Iniciar sesión
+- `POST /api/v1/auth/refresh` - Refrescar token de acceso
 
 ### Roles
 - `GET /api/v1/roles` - Listar todos los roles (id, nombre, descripción)
-- `GET /api/v1/roles/{id}/nombre` - Obtener el nombre del rol por ID
-- `GET /api/v1/roles/{id}/descripcion` - Obtener la descripción del rol por ID
+- `GET /api/v1/roles/{id}/name` - Obtener el nombre del rol por ID
+- `GET /api/v1/roles/{id}/description` - Obtener la descripción del rol por ID
 
 ### Usuarios
-- `GET /api/v1/usuarios` - Obtener todos los usuarios
-- `GET /api/v1/usuarios/{id}` - Obtener usuario por ID
-- `GET /api/v1/usuarios/correo/{correo}` - Obtener usuario por correo
-- `GET /api/v1/usuarios/documento/{numeroDocumento}` - Obtener usuario por documento
-- `POST /api/v1/usuarios` - Crear nuevo usuario
-- `DELETE /api/v1/usuarios/{id}` - Eliminar usuario
+- `GET /api/v1/users` - Obtener todos los usuarios
+- `GET /api/v1/users/{id}` - Obtener usuario por ID
+- `GET /api/v1/users/email/{email}` - Obtener usuario por email
+- `GET /api/v1/users/document/{documentNumber}` - Obtener usuario por número de documento
+- `POST /api/v1/users` - Crear nuevo usuario
+- `DELETE /api/v1/users/{id}` - Eliminar usuario
+
+### Objetos (Object)
+- `GET /api/v1/object` - Obtener todos los objetos
+- `POST /api/v1/object` - Crear nuevo objeto
 
 ## 🔐 Seguridad
 
@@ -110,6 +103,9 @@ http://localhost:8081/swagger-ui/index.html
 - Autenticación basada en JWT
 - CORS configurado para desarrollo
 - Endpoints de autenticación y documentación públicos
+- Variables de entorno para credenciales sensibles
+- Relaciones JPA configuradas con `@EntityGraph` para evitar `LazyInitializationException`
+- Roles dinámicos basados en la base de datos
 
 ## 📝 Estructura del Proyecto
 

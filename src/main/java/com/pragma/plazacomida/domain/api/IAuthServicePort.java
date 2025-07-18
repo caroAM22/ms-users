@@ -1,10 +1,11 @@
 package com.pragma.plazacomida.domain.api;
 
-import com.pragma.plazacomida.domain.model.UsuarioModel;
+import com.pragma.plazacomida.domain.model.UserModel;
 
 public interface IAuthServicePort {
-    String generateToken(UsuarioModel usuario);
+    String generateToken(UserModel user);
+    String generateRefreshToken(UserModel user);
     boolean validateToken(String token);
-    String getCorreoFromToken(String token);
-    UsuarioModel authenticateUser(String correo, String clave);
+    String getEmailFromToken(String token);
+    UserModel authenticateUser(String email, String password);
 } 

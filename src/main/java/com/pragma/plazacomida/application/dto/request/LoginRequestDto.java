@@ -11,10 +11,10 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginRequestDto {
-    @NotBlank(message = "El correo es obligatorio")
-    @Email(message = "El formato del correo no es válido")
-    private String correo;
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    private String email;
     
-    @NotBlank(message = "La clave es obligatoria")
-    private String clave;
+    @NotBlank(message = "Password is required")
+    private String password;
 } 
