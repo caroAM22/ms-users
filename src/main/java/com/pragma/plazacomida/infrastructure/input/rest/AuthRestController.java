@@ -5,15 +5,18 @@ import com.pragma.plazacomida.application.dto.response.LoginResponseDto;
 import com.pragma.plazacomida.application.handler.IAuthHandler;
 import com.pragma.plazacomida.domain.api.IAuthServicePort;
 import com.pragma.plazacomida.domain.api.IUserServicePort;
+import com.pragma.plazacomida.infrastructure.exceptionhandler.ExceptionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/auth")

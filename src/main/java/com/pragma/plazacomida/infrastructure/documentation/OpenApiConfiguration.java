@@ -5,7 +5,6 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,20 +12,13 @@ import java.util.List;
 
 @Configuration
 public class OpenApiConfiguration {
-    
-    @Value("${appDescription}")
-    private String appDescription;
-    
-    @Value("${appVersion}")
-    private String appVersion;
-    
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
                         .title("Plaza Comida - Microservicio de Usuarios")
-                        .description(appDescription)
-                        .version(appVersion)
+                        .description("Reto de Java - Spring Boot - Pragma")
+                        .version("1.0.0")
                         .contact(new Contact()
                                 .name("Plaza Comida Team")
                                 .email("support@plazacomida.com")
@@ -37,10 +29,10 @@ public class OpenApiConfiguration {
                 .servers(List.of(
                         new Server()
                                 .url("http://localhost:8081")
-                                .description("Servidor de desarrollo"),
+                                .description("Development server"),
                         new Server()
-                                .url("https://api.plazacomida.com/usuarios")
-                                .description("Servidor de producción")
+                                .url("https://api.plazacomida.com")
+                                .description("Production server")
                 ));
     }
 }

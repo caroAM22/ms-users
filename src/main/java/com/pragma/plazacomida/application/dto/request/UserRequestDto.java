@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
 @Data
@@ -24,7 +24,7 @@ public class UserRequestDto {
     private String documentNumber;
     
     @NotBlank(message = "Phone is required")
-    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Phone must have between 10 and 15 digits")
+    @Pattern(regexp = "^\\+?\\d{10,15}$", message = "Phone must have between 10 and 15 digits")
     private String phone;
     
     @NotNull(message = "Birth date is required")
