@@ -1,6 +1,7 @@
 package com.pragma.plazoleta.infrastructure.exceptionhandler;
 
 import com.pragma.plazoleta.domain.exception.UserValidationException;
+import com.pragma.plazoleta.domain.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,12 +14,22 @@ import java.util.Map;
 @RestControllerAdvice
 public class UserExceptionHandler {
     
+    private static final String MESSAGE_KEY = "message";
+    
     @ExceptionHandler(UserValidationException.class)
     public ResponseEntity<Map<String, Object>> handleUserValidationException(UserValidationException ex) {
         Map<String, Object> response = new HashMap<>();
-        response.put("message", ex.getMessage());
+        response.put(MESSAGE_KEY, ex.getMessage());
         
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+    
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(MESSAGE_KEY, ex.getMessage());
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -34,7 +45,7 @@ public class UserExceptionHandler {
             message = defaultMessage;
         }
         
-        response.put("message", message);
+        response.put(MESSAGE_KEY, message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 } 

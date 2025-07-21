@@ -1,6 +1,7 @@
 package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.api.IRoleServicePort;
+import com.pragma.plazoleta.domain.model.Role;
 import com.pragma.plazoleta.domain.spi.IRolePersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,5 +17,10 @@ public class RoleUseCase implements IRoleServicePort {
     @Override
     public UUID getRoleIdByName(String roleName) {
         return rolePersistencePort.findIdByName(roleName);
+    }
+    
+    @Override
+    public Role getRoleById(UUID roleId) {
+        return rolePersistencePort.findById(roleId);
     }
 } 

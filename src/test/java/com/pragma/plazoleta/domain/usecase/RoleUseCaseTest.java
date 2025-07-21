@@ -1,5 +1,6 @@
 package com.pragma.plazoleta.domain.usecase;
 
+import com.pragma.plazoleta.domain.model.Role;
 import com.pragma.plazoleta.domain.spi.IRolePersistencePort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,5 +35,21 @@ class RoleUseCaseTest {
 
         assertNotNull(result);
         assertEquals(adminRoleId, result);
+    }
+    
+    @Test
+    void shouldReturnRoleWhenRoleIdExists() {
+        UUID roleId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        Role expectedRole = new Role(roleId, "OWNER", "Restaurant owner");
+
+        when(rolePersistencePort.findById(roleId))
+                .thenReturn(expectedRole);
+
+        Role result = roleUseCase.getRoleById(roleId);
+
+        assertNotNull(result);
+        assertEquals(expectedRole.getId(), result.getId());
+        assertEquals(expectedRole.getName(), result.getName());
+        assertEquals(expectedRole.getDescription(), result.getDescription());
     }
 } 

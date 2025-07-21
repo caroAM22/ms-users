@@ -22,6 +22,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.pragma.plazoleta.application.dto.response.UserRoleResponse;
+import com.pragma.plazoleta.domain.api.IRoleServicePort;
+import com.pragma.plazoleta.domain.model.Role;
+
 @ExtendWith(MockitoExtension.class)
 class UserHandlerTest {
 
@@ -30,6 +34,9 @@ class UserHandlerTest {
 
     @Mock
     private IUserMapper userMapper;
+
+    @Mock
+    private IRoleServicePort roleServicePort;
 
     @InjectMocks
     private UserHandler userHandler;
@@ -146,6 +153,31 @@ class UserHandlerTest {
         assertNotNull(actualResponses);
         assertTrue(actualResponses.isEmpty());
         verify(userApi).getAllUsers();
+    }
+    
+    @Test
+    void shouldGetUserRoleSuccessfully() {
+        UUID userId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        UUID roleId = UUID.fromString("660e8400-e29b-41d4-a716-446655440001");
+        
+        User testUser = createTestUser("John", "Doe", "john@example.com");
+        testUser.setId(userId);
+        testUser.setRoleId(roleId);
+        
+        Role testRole = new Role(roleId, "OWNER", "Restaurant owner");
+        
+        UserRoleResponse expectedResponseUserRole = new UserRoleResponse(roleId, "OWNER");
+
+        when(userApi.getUserById(userId)).thenReturn(testUser);
+        when(roleServicePort.getRoleById(roleId)).thenReturn(testRole);
+
+        UserRoleResponse actualResponse = userHandler.getUserRole(userId);
+
+        assertNotNull(actualResponse);
+        assertEquals(expectedResponseUserRole.getRoleId(), actualResponse.getRoleId());
+        assertEquals(expectedResponseUserRole.getRoleName(), actualResponse.getRoleName());
+        verify(userApi).getUserById(userId);
+        verify(roleServicePort).getRoleById(roleId);
     }
 
     private User createTestUser(String name, String lastname, String email) {

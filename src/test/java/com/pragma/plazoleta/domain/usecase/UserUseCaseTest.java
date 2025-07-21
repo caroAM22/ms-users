@@ -233,23 +233,34 @@ class UserUseCaseTest {
 
     @Test
     void shouldGetAllUsersSuccessfully() {
-        // Given
         List<User> expectedUsers = Arrays.asList(
             createTestUser("John", "Doe", "john@example.com"),
-            createTestUser("Jane", "Smith", "jane@example.com"),
-            createTestUser("Bob", "Johnson", "bob@example.com")
+            createTestUser("Jane", "Smith", "jane@example.com")
         );
-        
+
         when(userPersistencePort.getAllUsers()).thenReturn(expectedUsers);
 
-        // When
-        List<User> actualUsers = userUseCase.getAllUsers();
+        List<User> result = userUseCase.getAllUsers();
 
-        // Then
-        assertNotNull(actualUsers);
-        assertEquals(3, actualUsers.size());
-        assertEquals(expectedUsers, actualUsers);
-        verify(userPersistencePort).getAllUsers();
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(expectedUsers, result);
+    }
+    
+    @Test
+    void shouldGetUserByIdSuccessfully() {
+        UUID userId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        User expectedUser = createTestUser("John", "Doe", "john@example.com");
+        expectedUser.setId(userId);
+
+        when(userPersistencePort.findById(userId)).thenReturn(expectedUser);
+
+        User result = userUseCase.getUserById(userId);
+
+        assertNotNull(result);
+        assertEquals(expectedUser.getId(), result.getId());
+        assertEquals(expectedUser.getName(), result.getName());
+        assertEquals(expectedUser.getEmail(), result.getEmail());
     }
 
     @Test

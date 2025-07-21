@@ -52,6 +52,11 @@ public class UserUseCase implements IUserApi {
         return userPersistencePort.getAllUsers();
     }
     
+    @Override
+    public User getUserById(UUID userId) {
+        return userPersistencePort.findById(userId);
+    }
+    
     private void validateUser(User user) {
         validateAge(user.getBirthDate());
         validatePhone(user.getPhone());
