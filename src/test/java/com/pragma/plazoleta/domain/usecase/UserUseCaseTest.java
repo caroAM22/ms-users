@@ -1,0 +1,288 @@
+package com.pragma.plazoleta.domain.usecase;
+
+import com.pragma.plazoleta.domain.api.IRoleServicePort;
+import com.pragma.plazoleta.domain.exception.UserValidationException;
+import com.pragma.plazoleta.domain.model.User;
+import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+
+@ExtendWith(MockitoExtension.class)
+class UserUseCaseTest {
+
+    @Mock
+    private IUserPersistencePort userPersistencePort;
+
+    @Mock
+    private IRoleServicePort roleServicePort;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @InjectMocks
+    private UserUseCase userUseCase;
+
+    private User validUser;
+    private UUID ownerRoleId;
+
+    @BeforeEach
+    void setUp() {
+        ownerRoleId = UUID.fromString("660e8400-e29b-41d4-a716-446655440001");
+        
+        validUser = new User();
+        validUser.setName("John");
+        validUser.setLastname("Doe");
+        validUser.setDocumentNumber(1234567890L);
+        validUser.setPhone("+573001234567");
+        validUser.setBirthDate(LocalDate.of(1990, 1, 15));
+        validUser.setEmail("john.doe@example.com");
+        validUser.setPassword("SecurePassword123!");
+    }
+
+    @Test
+    void shouldCreateUserSuccessfullyWhenValidUser() {
+        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
+        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
+        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
+        when(userPersistencePort.saveUser(any())).thenReturn(validUser);
+
+        User result = userUseCase.createUser(validUser);
+
+        assertNotNull(result);
+        assertEquals(validUser.getName(), result.getName());
+        assertEquals(validUser.getEmail(), result.getEmail());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserUnder18() {
+        LocalDate birthDate17Years = LocalDate.now().minusYears(17).plusDays(1);
+        validUser.setBirthDate(birthDate17Years);
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("User must be at least 18 years old", exception.getMessage());
+    }
+
+    @Test
+    void shouldNotThrowExceptionWhenUserExactly18() {
+        LocalDate birthDate18Years = LocalDate.now().minusYears(18);
+        validUser.setBirthDate(birthDate18Years);
+        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
+        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
+        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
+        when(userPersistencePort.saveUser(any())).thenReturn(validUser);
+
+        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
+    }
+
+    @Test
+    void shouldNotThrowExceptionWhenUserOlderThan18() {
+        LocalDate birthDate25Years = LocalDate.now().minusYears(25);
+        validUser.setBirthDate(birthDate25Years);
+        
+        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
+        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
+        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
+        when(userPersistencePort.saveUser(any())).thenReturn(validUser);
+
+        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFutureBirthDate() {
+        LocalDate futureBirthDate = LocalDate.now().plusYears(1);
+        validUser.setBirthDate(futureBirthDate);
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("User must be at least 18 years old", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "invalid-email",
+        "invalid-mail@", 
+        "invalid-mail@gmailcom",
+        "test@",
+        "@gmail.com",
+        "test..test@gmail.com",
+        "test@.com",
+        "test@gmail.",
+        "test@gmail..com",
+        "test@test@test.com",
+        "test@.test.com"
+    })
+    void shouldThrowExceptionWhenInvalidEmail(String invalidEmail) {
+        validUser.setEmail(invalidEmail);
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("Email must have a valid format: something@domain.com", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "valid-mail@gmail.com",
+        "test@example.com",
+        "user.name@domain.co.uk",
+        "user+tag@example.org",
+        "123@numbers.com"
+    })
+    void shouldNotThrowExceptionWhenValidEmail(String validEmail) {
+        validUser.setEmail(validEmail);
+        setupValidUserMocks();
+
+        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenPhoneExceedsLength() {
+        validUser.setPhone("12345678901234"); 
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("Phone number cannot exceed 13 characters", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "123+456789",  
+        "abc123def",       
+        "123-456-7890",     
+        "123abc456",      
+        "phone123",      
+        "123@456"        
+    })
+    void shouldThrowExceptionWhenPhoneHasInvalidFormat(String invalidPhone) {
+        validUser.setPhone(invalidPhone);
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("Phone number must contain only digits and optionally start with +", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenPhoneIsEmpty() {
+        validUser.setPhone("");
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("Phone number is required", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "1",                
+        "1234567890123",   
+        "+123456789123",
+        "123456"  
+    })
+    void shouldNotThrowExceptionWhenValidPhone(String validPhone) {
+        validUser.setPhone(validPhone);
+        setupValidUserMocks();
+        
+        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEmailExists() {
+        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(true);
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("Email already exists", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDocumentExists() {
+        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(true);
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("Document number already exists", exception.getMessage());
+    }
+
+    @Test
+    void shouldGetAllUsersSuccessfully() {
+        // Given
+        List<User> expectedUsers = Arrays.asList(
+            createTestUser("John", "Doe", "john@example.com"),
+            createTestUser("Jane", "Smith", "jane@example.com"),
+            createTestUser("Bob", "Johnson", "bob@example.com")
+        );
+        
+        when(userPersistencePort.getAllUsers()).thenReturn(expectedUsers);
+
+        // When
+        List<User> actualUsers = userUseCase.getAllUsers();
+
+        // Then
+        assertNotNull(actualUsers);
+        assertEquals(3, actualUsers.size());
+        assertEquals(expectedUsers, actualUsers);
+        verify(userPersistencePort).getAllUsers();
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoUsersExist() {
+
+        when(userPersistencePort.getAllUsers()).thenReturn(Collections.emptyList());
+
+        List<User> actualUsers = userUseCase.getAllUsers();
+
+        assertNotNull(actualUsers);
+        assertTrue(actualUsers.isEmpty());
+        verify(userPersistencePort).getAllUsers();
+    }
+
+    private void setupValidUserMocks() {
+        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
+        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
+        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
+        when(userPersistencePort.saveUser(any())).thenReturn(validUser);
+    }
+
+    private User createTestUser(String name, String lastname, String email) {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setName(name);
+        user.setLastname(lastname);
+        user.setEmail(email);
+        user.setDocumentNumber(1234567890L);
+        user.setPhone("1234567890");
+        user.setBirthDate(LocalDate.of(1990, 1, 1));
+        user.setPassword("password123");
+        user.setRoleId(UUID.randomUUID());
+        return user;
+    }
+} 
