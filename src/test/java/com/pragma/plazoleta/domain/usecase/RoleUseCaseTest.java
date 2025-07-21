@@ -2,6 +2,7 @@ package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.model.Role;
 import com.pragma.plazoleta.domain.spi.IRolePersistencePort;
+import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,7 +32,6 @@ class RoleUseCaseTest {
 
         when(rolePersistencePort.findIdByName(adminRoleName))
                 .thenReturn(adminRoleId);
-
         UUID result = roleUseCase.getRoleIdByName(adminRoleName);
 
         assertNotNull(result);
@@ -44,12 +45,21 @@ class RoleUseCaseTest {
 
         when(rolePersistencePort.findById(roleId))
                 .thenReturn(expectedRole);
-
         Role result = roleUseCase.getRoleById(roleId);
 
         assertNotNull(result);
         assertEquals(expectedRole.getId(), result.getId());
         assertEquals(expectedRole.getName(), result.getName());
         assertEquals(expectedRole.getDescription(), result.getDescription());
+    }
+
+    @Test
+    void shouldThrowRoleNotFoundExceptionWhenRoleDoesNotExist() {
+        UUID roleId = UUID.randomUUID();
+        when(rolePersistencePort.findById(roleId)).thenReturn(null);
+
+        assertThrows(RoleNotFoundException.class, () -> {
+            roleUseCase.getRoleById(roleId);
+        });
     }
 } 

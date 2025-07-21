@@ -14,6 +14,7 @@ import java.time.Period;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import com.pragma.plazoleta.domain.exception.UserNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +55,11 @@ public class UserUseCase implements IUserApi {
     
     @Override
     public User getUserById(UUID userId) {
-        return userPersistencePort.findById(userId);
+        User user = userPersistencePort.findById(userId);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with id: " + userId);
+        }
+        return user;
     }
     
     private void validateUser(User user) {

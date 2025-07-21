@@ -2,6 +2,7 @@ package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.api.IRoleServicePort;
 import com.pragma.plazoleta.domain.exception.UserValidationException;
+import com.pragma.plazoleta.domain.exception.UserNotFoundException;
 import com.pragma.plazoleta.domain.model.User;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +70,8 @@ class UserUseCaseTest {
 
         assertNotNull(result);
         assertEquals(validUser.getName(), result.getName());
-        assertEquals(validUser.getEmail(), result.getEmail());
+        assertEquals(validUser.getPassword(), result.getPassword());
+        assertEquals(validUser.getRoleId(), result.getRoleId());
     }
 
     @Test
@@ -157,6 +159,26 @@ class UserUseCaseTest {
         setupValidUserMocks();
 
         assertDoesNotThrow(() -> userUseCase.createUser(validUser));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEmailIsEmpty() {
+        validUser.setEmail("");
+
+        UserValidationException exception = assertThrows(UserValidationException.class,
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("Email is required", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenBirthDateIsNull() {
+        validUser.setBirthDate(null);
+
+        UserValidationException exception = assertThrows(UserValidationException.class,
+            () -> userUseCase.createUser(validUser));
+
+        assertEquals("Birth date is required", exception.getMessage());
     }
 
     @Test
@@ -261,6 +283,16 @@ class UserUseCaseTest {
         assertEquals(expectedUser.getId(), result.getId());
         assertEquals(expectedUser.getName(), result.getName());
         assertEquals(expectedUser.getEmail(), result.getEmail());
+    }
+
+    @Test
+    void shouldThrowUserNotFoundExceptionWhenUserDoesNotExist() {
+        UUID userId = UUID.randomUUID();
+        when(userPersistencePort.findById(userId)).thenReturn(null);
+
+        assertThrows(UserNotFoundException.class, () -> {   
+            userUseCase.getUserById(userId);
+        });
     }
 
     @Test

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,10 @@ public class RoleUseCase implements IRoleServicePort {
     
     @Override
     public Role getRoleById(UUID roleId) {
-        return rolePersistencePort.findById(roleId);
+        Role role = rolePersistencePort.findById(roleId);
+        if (role == null) {
+            throw new RoleNotFoundException("Role not found with id: " + roleId);
+        }
+        return role;
     }
 } 
