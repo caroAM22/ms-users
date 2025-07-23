@@ -2,7 +2,6 @@ package com.pragma.plazoleta.infrastructure.input.rest;
 
 import com.pragma.plazoleta.application.dto.request.UserRequest;
 import com.pragma.plazoleta.application.dto.response.UserResponse;
-import com.pragma.plazoleta.application.dto.response.UserRoleResponse;
 import com.pragma.plazoleta.application.handler.IUserHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -143,24 +142,32 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
     
-    @GetMapping("/{userId}/role")
+    @GetMapping("/{userId}")
     @Operation(
-        summary = "Get user's role",
-        description = "Retrieves the role information (ID and name) for a specific user"
+        summary = "Get user by ID",
+        description = "Retrieves a user by ID, including their role information"
     )
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200",
-            description = "User role retrieved successfully",
+            description = "User retrieved successfully",
             content = @Content(
                 mediaType = "application/json",
-                schema = @Schema(implementation = UserRoleResponse.class),
+                schema = @Schema(implementation = UserResponse.class),
                 examples = @ExampleObject(
                     name = "Success Response",
                     value = """
                         {
-                          "roleId": "660e8400-e29b-41d4-a716-446655440001",
-                          "roleName": "OWNER"
+                          "id": "550e8400-e29b-41d4-a716-446655440000",
+                          "name": "John",
+                          "lastname": "Doe",
+                          "email": "john.doe@example.com",
+                          "phone": "+573001234567",
+                          "birthDate": "1990-01-15",
+                          "role": {
+                            "roleId": "660e8400-e29b-41d4-a716-446655440001",
+                            "roleName": "OWNER"
+                          }
                         }
                         """
                 )
@@ -185,7 +192,7 @@ public class UserController {
             )
         )
     })
-    public ResponseEntity<UserRoleResponse> getUserRole(
+    public ResponseEntity<UserResponse> getUserById(
         @Parameter(
             description = "User ID (UUID)",
             example = "550e8400-e29b-41d4-a716-446655440000",
@@ -193,7 +200,7 @@ public class UserController {
         )
         @PathVariable UUID userId
     ) {
-        UserRoleResponse response = userHandler.getUserRole(userId);
+        UserResponse response = userHandler.getUserById(userId);
         return ResponseEntity.ok(response);
     }
 } 

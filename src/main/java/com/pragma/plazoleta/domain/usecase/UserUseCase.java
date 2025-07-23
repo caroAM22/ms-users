@@ -1,6 +1,6 @@
 package com.pragma.plazoleta.domain.usecase;
 
-import com.pragma.plazoleta.domain.api.IUserApi;
+import com.pragma.plazoleta.domain.api.IUserServicePort;
 import com.pragma.plazoleta.domain.api.IRoleServicePort;
 import com.pragma.plazoleta.domain.exception.UserValidationException;
 import com.pragma.plazoleta.domain.model.User;
@@ -18,7 +18,7 @@ import com.pragma.plazoleta.domain.exception.UserNotFoundException;
 
 @Service
 @RequiredArgsConstructor
-public class UserUseCase implements IUserApi {
+public class UserUseCase implements IUserServicePort {
     
     private final IUserPersistencePort userPersistencePort;
     private final IRoleServicePort roleServicePort;

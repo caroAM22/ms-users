@@ -32,6 +32,6 @@ public class UserResponse {
     @Schema(description = "User's birth date", example = "1990-01-15")
     private LocalDate birthDate;
     
-    @Schema(description = "User's role ID", example = "660e8400-e29b-41d4-a716-446655440001")
-    private UUID roleId;
+    @Schema(description = "User's role information")
+    private UserRoleResponse role;
 } 

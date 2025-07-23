@@ -2,6 +2,7 @@ package com.pragma.plazoleta.application.mapper;
 
 import com.pragma.plazoleta.application.dto.request.UserRequest;
 import com.pragma.plazoleta.application.dto.response.UserResponse;
+import com.pragma.plazoleta.application.dto.response.UserRoleResponse;
 import com.pragma.plazoleta.domain.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
@@ -13,7 +14,7 @@ public interface IUserMapper {
     
     User toUser(UserRequest userRequest);
     
-    UserResponse toUserResponse(User user);
+    UserResponse toUserResponse(User user, UserRoleResponse role);
     
     List<UserResponse> toUserResponseList(List<User> users);
 } 

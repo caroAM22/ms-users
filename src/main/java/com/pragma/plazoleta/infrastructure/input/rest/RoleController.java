@@ -28,6 +28,7 @@ public class RoleController {
     @Operation(
         summary = "Get role ID by name",
         description = "Retrieves the unique identifier (UUID) for a role based on its name. " +
+                     "Send the role name as a query parameter, e.g., /api/v1/roles/id?roleName=OWNER. " +
                      "Available roles: ADMIN, OWNER, EMPLOYEE, CUSTOMER"
     )
     @ApiResponses(value = {
@@ -69,7 +70,7 @@ public class RoleController {
     public ResponseEntity<RoleResponse> getRoleIdByName(
         @Parameter(
             description = "Name of the role to find (ADMIN, OWNER, EMPLOYEE, CUSTOMER)",
-            example = "ADMIN",
+            example = "OWNER",
             required = true
         )
         @Valid @ModelAttribute RoleRequest request
