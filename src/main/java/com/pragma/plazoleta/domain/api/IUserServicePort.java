@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IUserServicePort {
-    User createUser(User user);
+    User createUser(User user, String creatorRoleName);
     List<User> getAllUsers();
     User getUserById(UUID userId);
 } 

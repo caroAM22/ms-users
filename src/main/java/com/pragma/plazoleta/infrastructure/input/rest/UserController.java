@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -30,7 +32,7 @@ public class UserController {
     @PostMapping
     @Operation(
         summary = "Create a new user",
-        description = "Creates a new user with OWNER role. Validates age (18+), phone format, and unique email/document."
+        description = "Creates a new user. The role is assigned automatically based on the authenticated user's role: ADMIN creates OWNER, OWNER creates EMPLOYEE. Others cannot create users. Validates age (18+), phone format, and unique email/document."
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -74,6 +76,24 @@ public class UserController {
             )
         ),
         @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden - You do not have permission to perform this action",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    name = "Forbidden",
+                    value = """
+                        {
+                          "timestamp": "2024-01-15T10:30:00",
+                          "status": 403,
+                          "error": "Forbidden",
+                          "message": "You are not allowed to perform this action"
+                        }
+                        """
+                )
+            )
+        ),
+        @ApiResponse(
             responseCode = "409",
             description = "Email or document already exists",
             content = @Content(
@@ -93,7 +113,12 @@ public class UserController {
         )
     })
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
-        UserResponse response = userHandler.handle(request);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String creatorRoleName = authentication.getAuthorities().stream()
+            .findFirst()
+            .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+            .orElse("");
+        UserResponse response = userHandler.handle(request, creatorRoleName);
         return ResponseEntity.status(201).body(response);
     }
 

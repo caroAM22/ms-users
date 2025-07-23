@@ -2,13 +2,12 @@ package com.pragma.plazoleta.application.handler.impl;
 
 import com.pragma.plazoleta.application.dto.request.UserRequest;
 import com.pragma.plazoleta.application.dto.response.UserResponse;
-import com.pragma.plazoleta.application.dto.response.UserRoleResponse;
 import com.pragma.plazoleta.application.handler.IUserHandler;
 import com.pragma.plazoleta.application.mapper.IUserMapper;
 import com.pragma.plazoleta.domain.api.IUserServicePort;
 import com.pragma.plazoleta.domain.api.IRoleServicePort;
 import com.pragma.plazoleta.domain.model.User;
-import com.pragma.plazoleta.domain.model.Role;
+import com.pragma.plazoleta.domain.service.UserPermissionsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,33 +21,29 @@ public class UserHandler implements IUserHandler {
     private final IUserServicePort userApi;
     private final IRoleServicePort roleServicePort;
     private final IUserMapper userMapper;
+    private final UserPermissionsService userPermissionsService = new UserPermissionsService();
     
     @Override
-    public UserResponse handle(UserRequest request) {
+    public UserResponse handle(UserRequest request, String creatorRoleName) {
+        String roleToAssign = userPermissionsService.getRoleToAssign(creatorRoleName);
+        UUID roleId = roleServicePort.getRoleIdByName(roleToAssign);
         User user = userMapper.toUser(request);
-        User createdUser = userApi.createUser(user);
-        Role role = roleServicePort.getRoleById(createdUser.getRoleId());
-        UserRoleResponse roleResponse = new UserRoleResponse(role.getId(), role.getName());
-        return userMapper.toUserResponse(createdUser, roleResponse);
+        user.setRoleId(roleId);
+        User createdUser = userApi.createUser(user, creatorRoleName);
+        return userMapper.toUserResponse(createdUser);
     }
     
     @Override
     public List<UserResponse> getAllUsers() {
         List<User> users = userApi.getAllUsers();
         return users.stream()
-                .map(user -> {
-                    Role role = roleServicePort.getRoleById(user.getRoleId());
-                    UserRoleResponse roleResponse = new UserRoleResponse(role.getId(), role.getName());
-                    return userMapper.toUserResponse(user, roleResponse);
-                })
+                .map(userMapper::toUserResponse)
                 .toList();
     }
     
     @Override
     public UserResponse getUserById(UUID userId) {
         User user = userApi.getUserById(userId);
-        Role role = roleServicePort.getRoleById(user.getRoleId());
-        UserRoleResponse roleResponse = new UserRoleResponse(role.getId(), role.getName());
-        return userMapper.toUserResponse(user, roleResponse);
+        return userMapper.toUserResponse(user);
     }
 } 

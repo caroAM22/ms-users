@@ -10,4 +10,6 @@ public interface IUserRepository extends JpaRepository<UserEntity, String> {
     boolean existsByEmail(String email);
     
     boolean existsByDocumentNumber(Long documentNumber);
+
+    java.util.Optional<UserEntity> findByEmail(String email);
 } 

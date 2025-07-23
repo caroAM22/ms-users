@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import com.pragma.plazoleta.domain.exception.UserNotFoundException;
+import com.pragma.plazoleta.domain.service.UserPermissionsService;
 
 @Service
 @RequiredArgsConstructor
@@ -23,17 +24,16 @@ public class UserUseCase implements IUserServicePort {
     private final IUserPersistencePort userPersistencePort;
     private final IRoleServicePort roleServicePort;
     private final PasswordEncoder passwordEncoder;
+    private final UserPermissionsService userPermissionsService;
     
     private static final Pattern PHONE_PATTERN = Pattern.compile("^[+]?\\d{1,13}$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^(?!.*\\.\\.)[a-zA-Z0-9]([a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\\.[a-zA-Z]{2,}$");
-    private static final String OWNER_ROLE_NAME = "OWNER";
     
     @Override
-    public User createUser(User user) {
+    public User createUser(User user, String creatorRoleName) {
         validateUser(user);
-        
-        UUID ownerRoleId = roleServicePort.getRoleIdByName(OWNER_ROLE_NAME);
-        
+        String roleToAssign = userPermissionsService.getRoleToAssign(creatorRoleName);
+        UUID roleId = roleServicePort.getRoleIdByName(roleToAssign);
         User userToSave = new User();
         userToSave.setId(UUID.randomUUID());
         userToSave.setName(user.getName());
@@ -43,8 +43,7 @@ public class UserUseCase implements IUserServicePort {
         userToSave.setBirthDate(user.getBirthDate());
         userToSave.setEmail(user.getEmail());
         userToSave.setPassword(passwordEncoder.encode(user.getPassword()));
-        userToSave.setRoleId(ownerRoleId);
-        
+        userToSave.setRoleId(roleId);
         return userPersistencePort.saveUser(userToSave);
     }
 
