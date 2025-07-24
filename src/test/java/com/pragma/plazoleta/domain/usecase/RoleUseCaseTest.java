@@ -3,6 +3,7 @@ package com.pragma.plazoleta.domain.usecase;
 import com.pragma.plazoleta.domain.model.Role;
 import com.pragma.plazoleta.domain.spi.IRolePersistencePort;
 import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
+import com.pragma.plazoleta.application.dto.response.RoleResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -61,5 +62,32 @@ class RoleUseCaseTest {
         assertThrows(RoleNotFoundException.class, () -> {
             roleUseCase.getRoleById(roleId);
         });
+    }
+
+    @Test
+    void shouldReturnRoleResponseWhenRoleExists() {
+        UUID roleId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        Role role = new Role(roleId, "OWNER", "Restaurant owner");
+
+        when(rolePersistencePort.findById(roleId)).thenReturn(role);
+
+        RoleResponse result = roleUseCase.getById(roleId);
+
+        assertNotNull(result);
+        assertEquals(roleId, result.getId());
+        assertEquals("OWNER", result.getName());
+        assertEquals("Restaurant owner", result.getDescription());
+    }
+
+    @Test
+    void shouldThrowRoleNotFoundExceptionWhenRoleDoesNotExistForGetById() {
+        UUID roleId = UUID.randomUUID();
+        when(rolePersistencePort.findById(roleId)).thenReturn(null);
+
+        RoleNotFoundException exception = assertThrows(RoleNotFoundException.class, () -> {
+            roleUseCase.getById(roleId);
+        });
+
+        assertEquals("Role not found with id: " + roleId, exception.getMessage());
     }
 } 

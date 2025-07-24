@@ -25,7 +25,7 @@ public class RoleUseCase implements IRoleServicePort {
     public Role getRoleById(UUID roleId) {
         Role role = rolePersistencePort.findById(roleId);
         if (role == null) {
-            throw new RoleNotFoundException("Role not found with id: " + roleId);
+            throw new RoleNotFoundException(roleId.toString());
         }
         return role;
     }
@@ -34,7 +34,7 @@ public class RoleUseCase implements IRoleServicePort {
     public RoleResponse getById(UUID id) {
         Role role = rolePersistencePort.findById(id);
         if (role == null) {
-            throw new com.pragma.plazoleta.domain.exception.RoleNotFoundException("Role not found with id: " + id);
+            throw new RoleNotFoundException(id.toString());
         }
         return new RoleResponse(role.getId(), role.getName(), role.getDescription());
     }
