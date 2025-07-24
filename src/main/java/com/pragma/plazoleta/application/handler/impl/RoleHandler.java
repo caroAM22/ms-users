@@ -14,17 +14,18 @@ import com.pragma.plazoleta.domain.model.Role;
 @RequiredArgsConstructor
 public class RoleHandler implements IRoleHandler {
     
-    private final IRoleServicePort getRoleIdByNameApi;
+    private final IRoleServicePort roleServicePort;
     
     @Override
     public RoleResponse handle(RoleRequest request) {
-        UUID roleId = getRoleIdByNameApi.getRoleIdByName(request.getRoleName());
-        Role role = getRoleIdByNameApi.getRoleById(roleId);
+        UUID roleId = roleServicePort.getRoleIdByName(request.getRoleName());
+        Role role = roleServicePort.getRoleById(roleId);
         return new RoleResponse(role.getId(), role.getName(), role.getDescription());
     }
 
     @Override
     public RoleResponse getById(UUID id) {
-        return getRoleIdByNameApi.getById(id);
+        Role role = roleServicePort.getRoleById(id);
+        return new RoleResponse(role.getId(), role.getName(), role.getDescription());
     }
 } 
