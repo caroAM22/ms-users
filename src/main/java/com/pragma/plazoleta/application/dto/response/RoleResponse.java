@@ -18,4 +18,16 @@ public class RoleResponse {
         example = "550e8400-e29b-41d4-a716-446655440000"
     )
     private UUID id;
+
+    @Schema(
+        description = "Name of the role",
+        example = "OWNER"
+    )
+    private String name;
+
+    @Schema(
+        description = "Description of the role",
+        example = "Restaurant owner"
+    )
+    private String description;
 } 

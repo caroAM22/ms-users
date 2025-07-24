@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import com.pragma.plazoleta.domain.model.Role;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,12 @@ public class RoleHandler implements IRoleHandler {
     @Override
     public RoleResponse handle(RoleRequest request) {
         UUID roleId = getRoleIdByNameApi.getRoleIdByName(request.getRoleName());
-        return new RoleResponse(roleId);
+        Role role = getRoleIdByNameApi.getRoleById(roleId);
+        return new RoleResponse(role.getId(), role.getName(), role.getDescription());
+    }
+
+    @Override
+    public RoleResponse getById(UUID id) {
+        return getRoleIdByNameApi.getById(id);
     }
 } 

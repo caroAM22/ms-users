@@ -1,6 +1,5 @@
 package com.pragma.plazoleta.infrastructure.input.rest;
 
-import com.pragma.plazoleta.application.dto.request.RoleRequest;
 import com.pragma.plazoleta.application.dto.response.RoleResponse;
 import com.pragma.plazoleta.application.handler.IRoleHandler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,10 +10,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/roles")
@@ -24,34 +24,27 @@ public class RoleController {
     
     private final IRoleHandler roleHandler;
     
-    @GetMapping("/id")
+    @GetMapping("/{id}")
     @Operation(
-        summary = "Get role ID by name",
-        description = "Retrieves the unique identifier (UUID) for a role based on its name. " +
-                     "Send the role name as a query parameter, e.g., /api/v1/roles/id?roleName=OWNER. " +
-                     "Available roles: ADMIN, OWNER, EMPLOYEE, CUSTOMER"
+        summary = "Get role by ID",
+        description = "Retrieves the complete role information (id, name, description) for a given role ID."
     )
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200",
-            description = "Role ID found successfully",
+            description = "Role found successfully",
             content = @Content(
                 mediaType = "application/json",
                 schema = @Schema(implementation = RoleResponse.class),
                 examples = @ExampleObject(
                     name = "Success Response",
-                    value = "{\"id\": \"550e8400-e29b-41d4-a716-446655440000\"}"
-                )
-            )
-        ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Invalid request - role name is missing or empty",
-            content = @Content(
-                mediaType = "application/json",
-                examples = @ExampleObject(
-                    name = "Bad Request",
-                    value = "{\"timestamp\": \"2024-01-15T10:30:00\", \"status\": 400, \"error\": \"Bad Request\", \"message\": \"Role name is required\"}"
+                    value = """
+                        {
+                          "id": "550e8400-e29b-41d4-a716-446655440000",
+                          "name": "OWNER",
+                          "description": "Restaurant owner"
+                        }
+                        """
                 )
             )
         ),
@@ -62,20 +55,27 @@ public class RoleController {
                 mediaType = "application/json",
                 examples = @ExampleObject(
                     name = "Not Found",
-                    value = "{\"timestamp\": \"2024-01-15T10:30:00\", \"status\": 404, \"error\": \"Role Not Found\", \"message\": \"Role not found with name: INVALID_ROLE\"}"
+                    value = """
+                        {
+                          "timestamp": "2024-01-15T10:30:00",
+                          "status": 404,
+                          "error": "Role Not Found",
+                          "message": "Role not found with id: INVALID_ID"
+                        }
+                        """
                 )
             )
         )
     })
-    public ResponseEntity<RoleResponse> getRoleIdByName(
+    public ResponseEntity<RoleResponse> getRoleById(
         @Parameter(
-            description = "Name of the role to find (ADMIN, OWNER, EMPLOYEE, CUSTOMER)",
-            example = "OWNER",
+            description = "Role ID (UUID)",
+            example = "550e8400-e29b-41d4-a716-446655440000",
             required = true
         )
-        @Valid @ModelAttribute RoleRequest request
+        @PathVariable UUID id
     ) {
-        RoleResponse response = roleHandler.handle(request);
+        RoleResponse response = roleHandler.getById(id);
         return ResponseEntity.ok(response);
     }
 } 
