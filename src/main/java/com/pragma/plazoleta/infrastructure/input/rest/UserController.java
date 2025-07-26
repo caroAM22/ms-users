@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -30,9 +31,9 @@ public class UserController {
     private final IUserHandler userHandler;
     
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
     @Operation(
-        summary = "Create a new user",
-        description = "Creates a new user. The role is assigned automatically based on the authenticated user's role: ADMIN creates OWNER, OWNER creates EMPLOYEE. Others cannot create users. Validates age (18+), phone format, and unique email/document."
+        summary = "Create a new user"
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -40,21 +41,7 @@ public class UserController {
             description = "User created successfully",
             content = @Content(
                 mediaType = "application/json",
-                schema = @Schema(implementation = UserResponse.class),
-                examples = @ExampleObject(
-                    name = "Success Response",
-                    value = """
-                        {
-                          "id": "550e8400-e29b-41d4-a716-446655440000",
-                          "name": "John",
-                          "lastname": "Doe",
-                          "email": "john.doe@example.com",
-                          "phone": "+573001234567",
-                          "birthDate": "1990-01-15",
-                          "roleId": "660e8400-e29b-41d4-a716-446655440001"
-                        }
-                        """
-                )
+                schema = @Schema(implementation = UserResponse.class)
             )
         ),
         @ApiResponse(
@@ -63,12 +50,8 @@ public class UserController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(
-                    name = "Validation Error",
                     value = """
                         {
-                          "timestamp": "2024-01-15T10:30:00",
-                          "status": 400,
-                          "error": "Bad Request",
                           "message": "User must be at least 18 years old"
                         }
                         """
@@ -77,16 +60,12 @@ public class UserController {
         ),
         @ApiResponse(
             responseCode = "403",
-            description = "Forbidden - You do not have permission to perform this action",
+            description = "Forbidden",
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(
-                    name = "Forbidden",
                     value = """
                         {
-                          "timestamp": "2024-01-15T10:30:00",
-                          "status": 403,
-                          "error": "Forbidden",
                           "message": "You are not allowed to perform this action"
                         }
                         """
@@ -99,12 +78,8 @@ public class UserController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(
-                    name = "Conflict Error",
                     value = """
                         {
-                          "timestamp": "2024-01-15T10:30:00",
-                          "status": 409,
-                          "error": "Conflict",
                           "message": "Email already exists"
                         }
                         """
@@ -118,14 +93,14 @@ public class UserController {
             .findFirst()
             .map(org.springframework.security.core.GrantedAuthority::getAuthority)
             .orElse("");
-        UserResponse response = userHandler.handle(request, creatorRoleName);
+        UserResponse response = userHandler.createUser(request, creatorRoleName);
         return ResponseEntity.status(201).body(response);
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
-        summary = "Get all users",
-        description = "Retrieves a list of all users in the system"
+        summary = "Get all users"
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -135,7 +110,6 @@ public class UserController {
                 mediaType = "application/json",
                 schema = @Schema(implementation = UserResponse.class),
                 examples = @ExampleObject(
-                    name = "Success Response",
                     value = """
                         [
                           {
@@ -168,9 +142,9 @@ public class UserController {
     }
     
     @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
-        summary = "Get user by ID",
-        description = "Retrieves a user by ID, including their role information"
+        summary = "Get user by ID"
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -189,10 +163,7 @@ public class UserController {
                           "email": "john.doe@example.com",
                           "phone": "+573001234567",
                           "birthDate": "1990-01-15",
-                          "role": {
-                            "roleId": "660e8400-e29b-41d4-a716-446655440001",
-                            "roleName": "OWNER"
-                          }
+                          "roleId": "660e8400-e29b-41d4-a716-446655440001"
                         }
                         """
                 )
@@ -207,10 +178,7 @@ public class UserController {
                     name = "Not Found",
                     value = """
                         {
-                          "timestamp": "2024-01-15T10:30:00",
-                          "status": 404,
-                          "error": "User Not Found",
-                          "message": "User not found with id: 550e8400-e29b-41d4-a716-446655440000"
+                          "message": "User not found"
                         }
                         """
                 )

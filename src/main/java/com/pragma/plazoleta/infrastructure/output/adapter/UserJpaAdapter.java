@@ -1,6 +1,5 @@
 package com.pragma.plazoleta.infrastructure.output.adapter;
 
-import com.pragma.plazoleta.domain.exception.UserNotFoundException;
 import com.pragma.plazoleta.domain.model.User;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import com.pragma.plazoleta.infrastructure.output.entity.UserEntity;
@@ -10,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -45,9 +45,7 @@ public class UserJpaAdapter implements IUserPersistencePort {
     }
     
     @Override
-    public User findById(UUID userId) {
-        UserEntity userEntity = userRepository.findById(userId.toString())
-                .orElseThrow(() -> new UserNotFoundException(userId.toString()));
-        return userEntityMapper.toUser(userEntity);
+    public Optional<User> findById(UUID userId) {
+        return userRepository.findById(userId.toString()).map(userEntityMapper::toUser);
     }
 } 

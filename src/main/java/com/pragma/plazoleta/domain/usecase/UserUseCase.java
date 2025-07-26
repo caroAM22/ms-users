@@ -13,9 +13,11 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import com.pragma.plazoleta.domain.exception.UserNotFoundException;
 import com.pragma.plazoleta.domain.service.UserPermissionsService;
+
+import static com.pragma.plazoleta.domain.utils.RegexPattern.EMAIL_PATTERN_REQUIRED;
+import static com.pragma.plazoleta.domain.utils.RegexPattern.PHONE_PATTERN_REQUIRED;
 
 @Service
 @RequiredArgsConstructor
@@ -25,25 +27,23 @@ public class UserUseCase implements IUserServicePort {
     private final IRoleServicePort roleServicePort;
     private final PasswordEncoder passwordEncoder;
     private final UserPermissionsService userPermissionsService;
-    
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^[+]?\\d{1,13}$");
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^(?!.*\\.\\.)[a-zA-Z0-9]([a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\\.[a-zA-Z]{2,}$");
-    
+
     @Override
     public User createUser(User user, String creatorRoleName) {
         validateUser(user);
         String roleToAssign = userPermissionsService.getRoleToAssign(creatorRoleName);
         UUID roleId = roleServicePort.getRoleIdByName(roleToAssign);
-        User userToSave = new User();
-        userToSave.setId(UUID.randomUUID());
-        userToSave.setName(user.getName());
-        userToSave.setLastname(user.getLastname());
-        userToSave.setDocumentNumber(user.getDocumentNumber());
-        userToSave.setPhone(user.getPhone());
-        userToSave.setBirthDate(user.getBirthDate());
-        userToSave.setEmail(user.getEmail());
-        userToSave.setPassword(passwordEncoder.encode(user.getPassword()));
-        userToSave.setRoleId(roleId);
+        User userToSave = User.builder()
+            .id(UUID.randomUUID())
+            .name(user.getName())
+            .lastname(user.getLastname())
+            .documentNumber(user.getDocumentNumber())
+            .phone(user.getPhone())
+            .birthDate(user.getBirthDate())
+            .email(user.getEmail())
+            .password(passwordEncoder.encode(user.getPassword()))
+            .roleId(roleId)
+            .build();
         return userPersistencePort.saveUser(userToSave);
     }
 
@@ -51,14 +51,11 @@ public class UserUseCase implements IUserServicePort {
     public List<User> getAllUsers() {
         return userPersistencePort.getAllUsers();
     }
-    
+
     @Override
     public User getUserById(UUID userId) {
-        User user = userPersistencePort.findById(userId);
-        if (user == null) {
-            throw new UserNotFoundException("User not found with id: " + userId);
-        }
-        return user;
+        return userPersistencePort.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
     }
     
     private void validateUser(User user) {
@@ -75,7 +72,7 @@ public class UserUseCase implements IUserServicePort {
         }
         
         Period age = Period.between(birthDate, LocalDate.now());
-        if (age.getYears() < 18) {
+        if (age.getYears() < MINIMUM_AGE_REQUIRED) {
             throw new UserValidationException("User must be at least 18 years old");
         }
     }
@@ -84,12 +81,12 @@ public class UserUseCase implements IUserServicePort {
         if (phone == null || phone.trim().isEmpty()) {
             throw new UserValidationException("Phone number is required");
         }
-        
-        if (phone.length() > 13) {
+
+        if (phone.length() > MAXIMUM_PHONE_LENGTH) {
             throw new UserValidationException("Phone number cannot exceed 13 characters");
         }
         
-        if (!PHONE_PATTERN.matcher(phone).matches()) {
+        if (!PHONE_PATTERN_REQUIRED.matcher(phone).matches()) {
             throw new UserValidationException("Phone number must contain only digits and optionally start with +");
         }
     }
@@ -111,7 +108,7 @@ public class UserUseCase implements IUserServicePort {
             throw new UserValidationException("Email is required");
         }
         
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
+        if (!EMAIL_PATTERN_REQUIRED.matcher(email).matches()) {
             throw new UserValidationException("Email must have a valid format: something@domain.com");
         }
     }

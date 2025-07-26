@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -15,7 +14,7 @@ import java.util.UUID;
 public class UserResponse {
     
     @Schema(description = "Unique identifier of the created user", example = "550e8400-e29b-41d4-a716-446655440000")
-    private UUID id;
+    private String id;
     
     @Schema(description = "User's first name", example = "John")
     private String name;
@@ -33,5 +32,5 @@ public class UserResponse {
     private LocalDate birthDate;
     
     @Schema(description = "User's role ID", example = "660e8400-e29b-41d4-a716-446655440001")
-    private UUID roleId;
+    private String roleId;
 } 

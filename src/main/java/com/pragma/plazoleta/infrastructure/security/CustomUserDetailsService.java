@@ -1,8 +1,7 @@
 package com.pragma.plazoleta.infrastructure.security;
 
 import com.pragma.plazoleta.infrastructure.output.entity.UserEntity;
-import com.pragma.plazoleta.infrastructure.output.repository.IUserRepository;
-import com.pragma.plazoleta.infrastructure.output.repository.IRoleRepository;
+import com.pragma.plazoleta.infrastructure.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,16 +16,12 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final IUserRepository userRepository;
-    private final IRoleRepository roleRepository;
+    private final UserService userService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-        String roleName = roleRepository.findById(user.getRoleId())
-                .map(r -> r.getName())
-                .orElse("USER");
+        UserEntity user = userService.getUserByEmail(email);
+        String roleName = userService.getRoleName(user.getRoleId());
         GrantedAuthority authority = new SimpleGrantedAuthority(roleName);
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())

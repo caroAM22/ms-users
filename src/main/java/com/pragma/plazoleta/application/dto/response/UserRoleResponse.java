@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,7 +12,7 @@ import java.util.UUID;
 public class UserRoleResponse {
     
     @Schema(description = "Role ID", example = "660e8400-e29b-41d4-a716-446655440001")
-    private UUID roleId;
+    private String roleId;
     
     @Schema(description = "Role name", example = "OWNER")
     private String roleName;

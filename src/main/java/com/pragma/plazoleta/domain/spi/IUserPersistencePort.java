@@ -2,6 +2,7 @@ package com.pragma.plazoleta.domain.spi;
 
 import com.pragma.plazoleta.domain.model.User;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface IUserPersistencePort {
@@ -9,5 +10,5 @@ public interface IUserPersistencePort {
     boolean existsByEmail(String email);
     boolean existsByDocumentNumber(Long documentNumber);
     List<User> getAllUsers();
-    User findById(UUID userId);
+    Optional<User> findById(UUID userId);
 } 

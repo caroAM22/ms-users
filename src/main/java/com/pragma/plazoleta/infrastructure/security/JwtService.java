@@ -21,14 +21,6 @@ public class JwtService {
     @Value("${jwt.refresh-expiration}")
     private long jwtRefreshExpirationMillis;
 
-    public long getJwtExpirationMillis() {
-        return jwtExpirationMillis;
-    }
-
-    public long getJwtRefreshExpirationMillis() {
-        return jwtRefreshExpirationMillis;
-    }
-
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
@@ -72,5 +64,13 @@ public class JwtService {
 
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
+    }
+
+    public String generateAccessToken(String userId, String role, String subject) {
+        return generateToken(userId, role, subject, jwtExpirationMillis);
+    }
+
+    public String generateRefreshToken(String userId, String role, String subject) {
+        return generateToken(userId, role, subject, jwtRefreshExpirationMillis);
     }
 } 

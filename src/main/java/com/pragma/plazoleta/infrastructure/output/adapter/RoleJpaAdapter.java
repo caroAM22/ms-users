@@ -1,14 +1,13 @@
 package com.pragma.plazoleta.infrastructure.output.adapter;
 
-import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
 import com.pragma.plazoleta.domain.model.Role;
 import com.pragma.plazoleta.domain.spi.IRolePersistencePort;
-import com.pragma.plazoleta.infrastructure.output.entity.RoleEntity;
 import com.pragma.plazoleta.infrastructure.output.mapper.IRoleEntityMapper;
 import com.pragma.plazoleta.infrastructure.output.repository.IRoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -19,16 +18,12 @@ public class RoleJpaAdapter implements IRolePersistencePort {
     private final IRoleEntityMapper roleEntityMapper;
     
     @Override
-    public UUID findIdByName(String roleName) {
-        return roleRepository.findIdByName(roleName)
-                .map(UUID::fromString)
-                .orElseThrow(() -> new RoleNotFoundException(roleName));
+    public Optional<UUID> findIdByName(String roleName) {
+        return roleRepository.findIdByName(roleName).map(UUID::fromString);
     }
     
     @Override
-    public Role findById(UUID roleId) {
-        RoleEntity roleEntity = roleRepository.findById(roleId.toString())
-                .orElseThrow(() -> new RoleNotFoundException(roleId.toString()));
-        return roleEntityMapper.toRole(roleEntity);
+    public Optional<Role> findRoleById(UUID roleId) {
+        return roleRepository.findById(roleId.toString()).map(roleEntityMapper::toRole);
     }
 } 
