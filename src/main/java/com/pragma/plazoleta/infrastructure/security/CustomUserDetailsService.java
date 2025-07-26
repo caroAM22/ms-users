@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         UserEntity user = userService.getUserByEmail(email);
         String roleName = userService.getRoleName(user.getRoleId());
-        GrantedAuthority authority = new SimpleGrantedAuthority(roleName);
+        GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + roleName);
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPassword())

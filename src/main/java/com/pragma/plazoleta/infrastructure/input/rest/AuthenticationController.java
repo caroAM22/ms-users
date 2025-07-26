@@ -4,6 +4,9 @@ import com.pragma.plazoleta.application.dto.request.LoginRequest;
 import com.pragma.plazoleta.application.dto.response.AuthTokensResponse;
 import com.pragma.plazoleta.application.dto.request.RefreshTokenRequest;
 import com.pragma.plazoleta.application.dto.response.AccessTokenResponse;
+import com.pragma.plazoleta.application.dto.request.UserRequest;
+import com.pragma.plazoleta.application.dto.response.UserResponse;
+import com.pragma.plazoleta.application.handler.IUserHandler;
 import com.pragma.plazoleta.infrastructure.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -22,6 +27,54 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+    private final IUserHandler userHandler;
+
+    @PostMapping("/register")
+    @Operation(
+        summary = "Register a new customer"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Customer registered successfully",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = UserResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation error",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                        {
+                          "message": "User must be at least 18 years old"
+                        }
+                        """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Email or document already exists",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                        {
+                          "message": "Email already exists"
+                        }
+                        """
+                )
+            )
+        )
+    })
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRequest request) {
+        UserResponse response = userHandler.registerUser(request);
+        return ResponseEntity.status(201).body(response);
+    }
 
     @PostMapping("/login")
     @Operation(

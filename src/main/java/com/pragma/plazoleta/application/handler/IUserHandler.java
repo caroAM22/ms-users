@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public interface IUserHandler {
     UserResponse createUser(UserRequest request, String creatorRoleName);
+    UserResponse registerUser(UserRequest request);
     List<UserResponse> getAllUsers();
     UserResponse getUserById(UUID userId);
 } 

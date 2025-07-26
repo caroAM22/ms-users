@@ -48,6 +48,24 @@ public class UserUseCase implements IUserServicePort {
     }
 
     @Override
+    public User registerUser(User user) {
+        validateUser(user);
+        UUID customerRoleId = roleServicePort.getRoleIdByName("CUSTOMER");
+        User userToSave = User.builder()
+            .id(UUID.randomUUID())
+            .name(user.getName())
+            .lastname(user.getLastname())
+            .documentNumber(user.getDocumentNumber())
+            .phone(user.getPhone())
+            .birthDate(user.getBirthDate())
+            .email(user.getEmail())
+            .password(passwordEncoder.encode(user.getPassword()))
+            .roleId(customerRoleId)
+            .build();
+        return userPersistencePort.saveUser(userToSave);
+    }
+
+    @Override
     public List<User> getAllUsers() {
         return userPersistencePort.getAllUsers();
     }

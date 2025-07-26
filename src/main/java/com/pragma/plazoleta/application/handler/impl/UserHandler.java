@@ -27,6 +27,13 @@ public class UserHandler implements IUserHandler {
     }
     
     @Override
+    public UserResponse registerUser(UserRequest request) {
+        User user = userMapper.toUser(request);
+        User createdUser = userApi.registerUser(user);
+        return userMapper.toUserResponse(createdUser);
+    }
+    
+    @Override
     public List<UserResponse> getAllUsers() {
         return userMapper.toUserResponseList(userApi.getAllUsers());
     }

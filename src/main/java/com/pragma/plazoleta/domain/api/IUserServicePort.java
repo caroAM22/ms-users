@@ -9,6 +9,7 @@ public interface IUserServicePort {
     int MAXIMUM_PHONE_LENGTH=13;
 
     User createUser(User user, String creatorRoleName);
+    User registerUser(User user);
     List<User> getAllUsers();
     User getUserById(UUID userId);
 } 

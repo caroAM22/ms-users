@@ -4,6 +4,7 @@ import com.pragma.plazoleta.domain.api.IRoleServicePort;
 import com.pragma.plazoleta.domain.exception.UserValidationException;
 import com.pragma.plazoleta.domain.exception.UserNotFoundException;
 import com.pragma.plazoleta.domain.exception.ForbiddenOperationException;
+import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
 import com.pragma.plazoleta.domain.model.User;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import com.pragma.plazoleta.domain.service.UserPermissionsService;
@@ -358,5 +359,72 @@ class UserUseCaseTest {
         user.setPassword("password123");
         user.setRoleId(UUID.randomUUID());
         return user;
+    }
+
+    @Test
+    void shouldRegisterUserSuccessfullyWithCustomerRole() {
+        UUID customerRoleId = UUID.fromString("660e8400-e29b-41d4-a716-446655440003");
+        when(roleServicePort.getRoleIdByName("CUSTOMER")).thenReturn(customerRoleId);
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
+        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
+        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
+        when(userPersistencePort.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+
+        User result = userUseCase.registerUser(validUser);
+
+        assertNotNull(result);
+        assertEquals(validUser.getName(), result.getName());
+        assertEquals(customerRoleId, result.getRoleId());
+        assertEquals("encodedPassword", result.getPassword());
+        
+        verify(roleServicePort).getRoleIdByName("CUSTOMER");
+        verify(passwordEncoder).encode(validUser.getPassword());
+        verify(userPersistencePort).saveUser(any(User.class));
+    }
+
+    @Test
+    void shouldThrowRoleNotFoundExceptionWhenCustomerRoleDoesNotExist() {
+        when(roleServicePort.getRoleIdByName("CUSTOMER")).thenThrow(new RoleNotFoundException());
+
+        RoleNotFoundException exception = assertThrows(RoleNotFoundException.class, 
+            () -> userUseCase.registerUser(validUser));
+        
+        assertEquals("Role not found", exception.getMessage());
+        verify(roleServicePort).getRoleIdByName("CUSTOMER");
+    }
+
+    @Test
+    void shouldValidateUserDataWhenRegistering() {
+        validUser.setEmail("invalid-email");
+        
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.registerUser(validUser));
+        
+        assertEquals("Email must have a valid format: something@domain.com", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEmailExistsDuringRegistration() {
+        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(true);
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.registerUser(validUser));
+        
+        assertEquals("Email already exists", exception.getMessage());
+        verify(userPersistencePort).existsByEmail(validUser.getEmail());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDocumentExistsDuringRegistration() {
+        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
+        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(true);
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.registerUser(validUser));
+        
+        assertEquals("Document number already exists", exception.getMessage());
+        verify(userPersistencePort).existsByEmail(validUser.getEmail());
+        verify(userPersistencePort).existsByDocumentNumber(validUser.getDocumentNumber());
     }
 } 
