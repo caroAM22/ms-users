@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +32,7 @@ class RoleUseCaseTest {
         String adminRoleName = "ADMIN";
 
         when(rolePersistencePort.findIdByName(adminRoleName))
-                .thenReturn(adminRoleId);
+                .thenReturn(Optional.of(adminRoleId));
         UUID result = roleUseCase.getRoleIdByName(adminRoleName);
 
         assertNotNull(result);
@@ -43,8 +44,8 @@ class RoleUseCaseTest {
         UUID roleId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         Role expectedRole = new Role(roleId, "OWNER", "Restaurant owner");
 
-        when(rolePersistencePort.findById(roleId))
-                .thenReturn(expectedRole);
+        when(rolePersistencePort.findRoleById(roleId))
+                .thenReturn(Optional.of(expectedRole));
         Role result = roleUseCase.getRoleById(roleId);
 
         assertNotNull(result);
@@ -56,7 +57,7 @@ class RoleUseCaseTest {
     @Test
     void shouldThrowRoleNotFoundExceptionWhenRoleDoesNotExist() {
         UUID roleId = UUID.randomUUID();
-        when(rolePersistencePort.findById(roleId)).thenReturn(null);
+        when(rolePersistencePort.findRoleById(roleId)).thenReturn(Optional.empty());
 
         assertThrows(RoleNotFoundException.class, () -> {
             roleUseCase.getRoleById(roleId);

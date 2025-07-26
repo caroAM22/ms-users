@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
 
+
 @Service
 @RequiredArgsConstructor
 public class RoleUseCase implements IRoleServicePort {
@@ -17,15 +18,13 @@ public class RoleUseCase implements IRoleServicePort {
     
     @Override
     public UUID getRoleIdByName(String roleName) {
-        return rolePersistencePort.findIdByName(roleName);
+        return rolePersistencePort.findIdByName(roleName)
+            .orElseThrow(RoleNotFoundException::new);
     }
     
     @Override
     public Role getRoleById(UUID roleId) {
-        Role role = rolePersistencePort.findById(roleId);
-        if (role == null) {
-            throw new RoleNotFoundException(roleId.toString());
-        }
-        return role;
+        return rolePersistencePort.findRoleById(roleId)
+            .orElseThrow(RoleNotFoundException::new);
     }
 } 

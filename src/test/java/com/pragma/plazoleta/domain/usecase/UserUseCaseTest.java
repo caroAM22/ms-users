@@ -18,10 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -268,7 +265,7 @@ class UserUseCaseTest {
         User expectedUser = createTestUser("John", "Doe", "john@example.com");
         expectedUser.setId(userId);
 
-        when(userPersistencePort.findById(userId)).thenReturn(expectedUser);
+        when(userPersistencePort.findById(userId)).thenReturn(Optional.of(expectedUser));
 
         User result = userUseCase.getUserById(userId);
 
@@ -281,7 +278,7 @@ class UserUseCaseTest {
     @Test
     void shouldThrowUserNotFoundExceptionWhenUserDoesNotExist() {
         UUID userId = UUID.randomUUID();
-        when(userPersistencePort.findById(userId)).thenReturn(null);
+        when(userPersistencePort.findById(userId)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> {   
             userUseCase.getUserById(userId);
@@ -333,7 +330,7 @@ class UserUseCaseTest {
 
     @Test
     void employeeCannotCreateUser() {
-        when(userPermissionsService.getRoleToAssign("EMPLOYEE")).thenThrow(new ForbiddenOperationException("No tienes permisos para crear usuarios"));
+        when(userPermissionsService.getRoleToAssign("EMPLOYEE")).thenThrow(new ForbiddenOperationException());
         assertThrows(ForbiddenOperationException.class, () ->
             userUseCase.createUser(validUser, "EMPLOYEE")
         );

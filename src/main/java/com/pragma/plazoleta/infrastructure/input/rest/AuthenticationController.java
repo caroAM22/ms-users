@@ -24,6 +24,40 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/login")
+    @Operation(
+        summary = "User login"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Login successful",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                        {
+                          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                          "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        }
+                        """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Invalid credentials",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject( 
+                    value = """
+                        {
+                          "message": "Invalid credentials"
+                        }
+                        """
+                )
+            )
+        )
+    })
     public ResponseEntity<AuthTokensResponse> login(@RequestBody LoginRequest request) {
         String email = request.getEmail();
         String password = request.getPassword();
@@ -34,8 +68,7 @@ public class AuthenticationController {
 
     @PostMapping("/refresh")
     @Operation(
-        summary = "Refresh access token",
-        description = "Receives a valid refresh token and returns a new access token."
+        summary = "Refresh access token"
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -56,6 +89,7 @@ public class AuthenticationController {
     public ResponseEntity<AccessTokenResponse> refresh(@RequestBody RefreshTokenRequest request) {
         String refreshToken = request.getRefreshToken();
         String token = authenticationService.refresh(refreshToken);
-        return ResponseEntity.ok(new AccessTokenResponse(token));
+        AccessTokenResponse response = new AccessTokenResponse(token);
+        return ResponseEntity.ok(response);
     }
 } 

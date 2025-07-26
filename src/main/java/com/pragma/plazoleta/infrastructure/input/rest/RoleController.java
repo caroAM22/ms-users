@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -20,6 +21,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/roles")
 @RequiredArgsConstructor
 @Tag(name = "Role Management", description = "Role management endpoints for Plaza Comida application")
+@PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
 public class RoleController {
     
     private final IRoleHandler roleHandler;
@@ -37,7 +39,6 @@ public class RoleController {
                 mediaType = "application/json",
                 schema = @Schema(implementation = RoleResponse.class),
                 examples = @ExampleObject(
-                    name = "Success Response",
                     value = """
                         {
                           "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -54,12 +55,8 @@ public class RoleController {
             content = @Content(
                 mediaType = "application/json",
                 examples = @ExampleObject(
-                    name = "Not Found",
                     value = """
                         {
-                          "timestamp": "2024-01-15T10:30:00",
-                          "status": 404,
-                          "error": "Role Not Found",
                           "message": "Role not found with id: INVALID_ID"
                         }
                         """

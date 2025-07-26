@@ -14,6 +14,6 @@ public interface IUserMapper {
     User toUser(UserRequest userRequest);
     
     UserResponse toUserResponse(User user);
-    
+
     List<UserResponse> toUserResponseList(List<User> users);
 } 
