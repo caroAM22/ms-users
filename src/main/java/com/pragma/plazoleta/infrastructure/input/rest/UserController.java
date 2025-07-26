@@ -92,6 +92,7 @@ public class UserController {
         String creatorRoleName = authentication.getAuthorities().stream()
             .findFirst()
             .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+            .map(authority -> authority.startsWith("ROLE_") ? authority.substring(5) : authority)
             .orElse("");
         UserResponse response = userHandler.createUser(request, creatorRoleName);
         return ResponseEntity.status(201).body(response);
