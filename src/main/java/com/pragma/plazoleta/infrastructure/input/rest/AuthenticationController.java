@@ -32,8 +32,8 @@ public class AuthenticationController {
     @Operation(summary = "Register a new customer")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Customer registered successfully", content = @Content(schema = @Schema(implementation = UserResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Validation error"),
-        @ApiResponse(responseCode = "409", description = "Email or document already exists")
+        @ApiResponse(responseCode = "400", description = "Validation error",content = @Content(schema = @Schema(hidden = true))),
+        @ApiResponse(responseCode = "409", description = "Email or document already exists",content = @Content(schema = @Schema(hidden = true)))
     })
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRequest request) {
         UserResponse response = userHandler.registerUser(request);
@@ -46,7 +46,7 @@ public class AuthenticationController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200",description = "Login successful",content = @Content(schema = @Schema(implementation = AuthTokensResponse.class))),
-        @ApiResponse(responseCode = "401",description = "Invalid credentials")
+        @ApiResponse(responseCode = "401",description = "Invalid credentials",content = @Content(schema = @Schema(hidden = true)))
     })
     public ResponseEntity<AuthTokensResponse> login(@RequestBody LoginRequest request) {
         String email = request.getEmail();
@@ -61,8 +61,8 @@ public class AuthenticationController {
         summary = "Refresh access token"
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200",description = "New access token generated"),
-        @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
+        @ApiResponse(responseCode = "200",description = "New access token generated",content = @Content(schema = @Schema(implementation = AccessTokenResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token",content = @Content(schema = @Schema(hidden = true)))
     })
     public ResponseEntity<AccessTokenResponse> refresh(@RequestBody RefreshTokenRequest request) {
         String refreshToken = request.getRefreshToken();

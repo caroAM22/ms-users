@@ -29,7 +29,7 @@ public class RoleController {
     @Operation(summary = "Get role by ID", description = "Retrieves the complete role information (id, name, description) for a given role ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Role found successfully", content = @Content(schema = @Schema(implementation = RoleResponse.class))),
-        @ApiResponse(responseCode = "404", description = "Role not found")
+        @ApiResponse(responseCode = "404", description = "Role not found",content = @Content(schema = @Schema(hidden = true)))
     })
     public ResponseEntity<RoleResponse> getRoleById(
         @Parameter(

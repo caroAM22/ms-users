@@ -31,9 +31,9 @@ public class UserController {
     @Operation(summary = "Create a new user")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201",description = "User created successfully",content = @Content(schema = @Schema(implementation = UserResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Validation error"),
-        @ApiResponse(responseCode = "403",description = "Forbidden"),
-        @ApiResponse(responseCode = "409",description = "Email or document already exists")
+        @ApiResponse(responseCode = "400", description = "Validation error",content = @Content(schema = @Schema(hidden = true))),
+        @ApiResponse(responseCode = "403",description = "Forbidden",content = @Content(schema = @Schema(hidden = true))),
+        @ApiResponse(responseCode = "409",description = "Email or document already exists",content = @Content(schema = @Schema(hidden = true)))
     })
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
         UserResponse response = userHandler.createUser(request);
@@ -45,7 +45,7 @@ public class UserController {
     @Operation(summary = "Get all users")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200",description = "Users retrieved successfully",content = @Content(schema = @Schema(implementation = UserResponse.class))),
-        @ApiResponse(responseCode = "403",description = "Forbidden")
+        @ApiResponse(responseCode = "403",description = "Forbidden",content = @Content(schema = @Schema(hidden = true)))
     })
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userHandler.getAllUsers();
@@ -57,7 +57,7 @@ public class UserController {
     @Operation(summary = "Get user by ID")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200",description = "User retrieved successfully",content = @Content(schema = @Schema(implementation = UserResponse.class))),
-        @ApiResponse(responseCode = "404",description = "User not found")
+        @ApiResponse(responseCode = "404",description = "User not found",content = @Content(schema = @Schema(hidden = true)))
     })
     public ResponseEntity<UserResponse> getUserById(
         @Parameter(
