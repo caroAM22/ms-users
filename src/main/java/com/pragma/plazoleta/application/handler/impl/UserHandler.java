@@ -20,9 +20,9 @@ public class UserHandler implements IUserHandler {
     private final IUserMapper userMapper;
     
     @Override
-    public UserResponse createUser(UserRequest request, String creatorRoleName) {
+    public UserResponse createUser(UserRequest request) {
         User user = userMapper.toUser(request);
-        User createdUser = userApi.createUser(user, creatorRoleName);
+        User createdUser = userApi.createUser(user);
         return userMapper.toUserResponse(createdUser);
     }
     

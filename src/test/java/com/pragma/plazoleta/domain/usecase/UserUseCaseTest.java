@@ -7,6 +7,7 @@ import com.pragma.plazoleta.domain.exception.ForbiddenOperationException;
 import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
 import com.pragma.plazoleta.domain.model.User;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
+import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.service.UserPermissionsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ class UserUseCaseTest {
     @Mock
     private UserPermissionsService userPermissionsService;
 
+    @Mock
+    private ISecurityContextPort securityContextPort;
+
     @InjectMocks
     private UserUseCase userUseCase;
 
@@ -63,6 +67,7 @@ class UserUseCaseTest {
 
     @Test
     void shouldCreateUserSuccessfullyWhenValidUser() {
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
         when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
         when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
@@ -70,7 +75,7 @@ class UserUseCaseTest {
         when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
         when(userPersistencePort.saveUser(any())).thenReturn(validUser);
 
-        User result = userUseCase.createUser(validUser, "ADMIN");
+        User result = userUseCase.createUser(validUser);
 
         assertNotNull(result);
         assertEquals(validUser.getName(), result.getName());
@@ -84,7 +89,7 @@ class UserUseCaseTest {
         validUser.setBirthDate(birthDate17Years);
 
         UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
 
         assertEquals("User must be at least 18 years old", exception.getMessage());
     }
@@ -93,6 +98,7 @@ class UserUseCaseTest {
     void shouldNotThrowExceptionWhenUserExactly18() {
         LocalDate birthDate18Years = LocalDate.now().minusYears(18);
         validUser.setBirthDate(birthDate18Years);
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
         when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
         when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
@@ -100,13 +106,14 @@ class UserUseCaseTest {
         when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
         when(userPersistencePort.saveUser(any())).thenReturn(validUser);
 
-        assertDoesNotThrow(() -> userUseCase.createUser(validUser, "ADMIN"));
+        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
     }
 
     @Test
     void shouldNotThrowExceptionWhenUserOlderThan18() {
         LocalDate birthDate25Years = LocalDate.now().minusYears(25);
         validUser.setBirthDate(birthDate25Years);
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
         when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
         when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
@@ -114,7 +121,7 @@ class UserUseCaseTest {
         when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
         when(userPersistencePort.saveUser(any())).thenReturn(validUser);
 
-        assertDoesNotThrow(() -> userUseCase.createUser(validUser, "ADMIN"));
+        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
     }
 
     @Test
@@ -123,7 +130,7 @@ class UserUseCaseTest {
         validUser.setBirthDate(futureBirthDate);
 
         UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
 
         assertEquals("User must be at least 18 years old", exception.getMessage());
     }
@@ -146,7 +153,7 @@ class UserUseCaseTest {
         validUser.setEmail(invalidEmail);
 
         UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
 
         assertEquals("Email must have a valid format: something@domain.com", exception.getMessage());
     }
@@ -163,14 +170,14 @@ class UserUseCaseTest {
         validUser.setEmail(validEmail);
         setupValidUserMocks();
 
-        assertDoesNotThrow(() -> userUseCase.createUser(validUser, "ADMIN"));
+        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
     }
 
     @Test
     void shouldThrowExceptionWhenEmailIsEmpty() {
         validUser.setEmail("");
         UserValidationException exception = assertThrows(UserValidationException.class,
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
         assertEquals("Email is required", exception.getMessage());
     }
 
@@ -178,7 +185,7 @@ class UserUseCaseTest {
     void shouldThrowExceptionWhenBirthDateIsNull() {
         validUser.setBirthDate(null);
         UserValidationException exception = assertThrows(UserValidationException.class,
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
         assertEquals("Birth date is required", exception.getMessage());
     }
 
@@ -186,7 +193,7 @@ class UserUseCaseTest {
     void shouldThrowExceptionWhenPhoneExceedsLength() {
         validUser.setPhone("12345678901234"); 
         UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
         assertEquals("Phone number cannot exceed 13 characters", exception.getMessage());
     }
 
@@ -202,7 +209,7 @@ class UserUseCaseTest {
     void shouldThrowExceptionWhenPhoneHasInvalidFormat(String invalidPhone) {
         validUser.setPhone(invalidPhone);
         UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
         assertEquals("Phone number must contain only digits and optionally start with +", exception.getMessage());
     }
 
@@ -210,7 +217,7 @@ class UserUseCaseTest {
     void shouldThrowExceptionWhenPhoneIsEmpty() {
         validUser.setPhone("");
         UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
         assertEquals("Phone number is required", exception.getMessage());
     }
 
@@ -225,14 +232,14 @@ class UserUseCaseTest {
         validUser.setPhone(validPhone);
         setupValidUserMocks();
 
-        assertDoesNotThrow(() -> userUseCase.createUser(validUser, "ADMIN"));
+        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
     }
 
     @Test
     void shouldThrowExceptionWhenEmailExists() {
         when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(true);
         UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
         assertEquals("Email already exists", exception.getMessage());
     }
 
@@ -240,7 +247,7 @@ class UserUseCaseTest {
     void shouldThrowExceptionWhenDocumentExists() {
         when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(true);
         UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser, "ADMIN"));
+            () -> userUseCase.createUser(validUser));
         assertEquals("Document number already exists", exception.getMessage());
     }
 
@@ -300,6 +307,7 @@ class UserUseCaseTest {
 
     @Test
     void adminCanCreateOwner() {
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
         when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
         when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
@@ -307,7 +315,7 @@ class UserUseCaseTest {
         when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
         when(userPersistencePort.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        User result = userUseCase.createUser(validUser, "ADMIN");
+        User result = userUseCase.createUser(validUser);
         assertNotNull(result);
         verify(userPermissionsService).getRoleToAssign("ADMIN");
         assertEquals(ownerRoleId, result.getRoleId());
@@ -316,6 +324,7 @@ class UserUseCaseTest {
     @Test
     void ownerCanCreateEmployee() {
         UUID employeeRoleId = UUID.randomUUID();
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
         when(userPermissionsService.getRoleToAssign("OWNER")).thenReturn("EMPLOYEE");
         when(roleServicePort.getRoleIdByName("EMPLOYEE")).thenReturn(employeeRoleId);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
@@ -323,7 +332,7 @@ class UserUseCaseTest {
         when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
         when(userPersistencePort.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        User result = userUseCase.createUser(validUser, "OWNER");
+        User result = userUseCase.createUser(validUser);
         assertNotNull(result);
         verify(userPermissionsService).getRoleToAssign("OWNER");
         assertEquals(employeeRoleId, result.getRoleId());
@@ -331,14 +340,16 @@ class UserUseCaseTest {
 
     @Test
     void employeeCannotCreateUser() {
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("EMPLOYEE");
         when(userPermissionsService.getRoleToAssign("EMPLOYEE")).thenThrow(new ForbiddenOperationException());
         assertThrows(ForbiddenOperationException.class, () ->
-            userUseCase.createUser(validUser, "EMPLOYEE")
+            userUseCase.createUser(validUser)
         );
         verify(userPermissionsService).getRoleToAssign("EMPLOYEE");
     }
 
     private void setupValidUserMocks() {
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
         when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
         when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");

@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 
@@ -30,46 +29,11 @@ public class AuthenticationController {
     private final IUserHandler userHandler;
 
     @PostMapping("/register")
-    @Operation(
-        summary = "Register a new customer"
-    )
+    @Operation(summary = "Register a new customer")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "201",
-            description = "Customer registered successfully",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = UserResponse.class)
-            )
-        ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Validation error",
-            content = @Content(
-                mediaType = "application/json",
-                examples = @ExampleObject(
-                    value = """
-                        {
-                          "message": "User must be at least 18 years old"
-                        }
-                        """
-                )
-            )
-        ),
-        @ApiResponse(
-            responseCode = "409",
-            description = "Email or document already exists",
-            content = @Content(
-                mediaType = "application/json",
-                examples = @ExampleObject(
-                    value = """
-                        {
-                          "message": "Email already exists"
-                        }
-                        """
-                )
-            )
-        )
+        @ApiResponse(responseCode = "201", description = "Customer registered successfully", content = @Content(schema = @Schema(implementation = UserResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Validation error"),
+        @ApiResponse(responseCode = "409", description = "Email or document already exists")
     })
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRequest request) {
         UserResponse response = userHandler.registerUser(request);
@@ -81,35 +45,8 @@ public class AuthenticationController {
         summary = "User login"
     )
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Login successful",
-            content = @Content(
-                mediaType = "application/json",
-                examples = @ExampleObject(
-                    value = """
-                        {
-                          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                          "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                        }
-                        """
-                )
-            )
-        ),
-        @ApiResponse(
-            responseCode = "401",
-            description = "Invalid credentials",
-            content = @Content(
-                mediaType = "application/json",
-                examples = @ExampleObject( 
-                    value = """
-                        {
-                          "message": "Invalid credentials"
-                        }
-                        """
-                )
-            )
-        )
+        @ApiResponse(responseCode = "200",description = "Login successful",content = @Content(schema = @Schema(implementation = AuthTokensResponse.class))),
+        @ApiResponse(responseCode = "401",description = "Invalid credentials")
     })
     public ResponseEntity<AuthTokensResponse> login(@RequestBody LoginRequest request) {
         String email = request.getEmail();
@@ -124,20 +61,8 @@ public class AuthenticationController {
         summary = "Refresh access token"
     )
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "New access token generated",
-            content = @Content(
-                mediaType = "application/json",
-                examples = @ExampleObject(
-                    value = "{\"token\": \"nuevo_access_token_jwt\"}"
-                )
-            )
-        ),
-        @ApiResponse(
-            responseCode = "401",
-            description = "Invalid or expired refresh token"
-        )
+        @ApiResponse(responseCode = "200",description = "New access token generated"),
+        @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
     })
     public ResponseEntity<AccessTokenResponse> refresh(@RequestBody RefreshTokenRequest request) {
         String refreshToken = request.getRefreshToken();

@@ -8,7 +8,7 @@ public interface IUserServicePort {
     int MINIMUM_AGE_REQUIRED=18;
     int MAXIMUM_PHONE_LENGTH=13;
 
-    User createUser(User user, String creatorRoleName);
+    User createUser(User user);
     User registerUser(User user);
     List<User> getAllUsers();
     User getUserById(UUID userId);

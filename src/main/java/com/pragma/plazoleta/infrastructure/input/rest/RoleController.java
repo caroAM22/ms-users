@@ -5,7 +5,6 @@ import com.pragma.plazoleta.application.handler.IRoleHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -21,48 +20,16 @@ import java.util.UUID;
 @RequestMapping("/api/v1/roles")
 @RequiredArgsConstructor
 @Tag(name = "Role Management", description = "Role management endpoints for Plaza Comida application")
-@PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
 public class RoleController {
     
     private final IRoleHandler roleHandler;
     
     @GetMapping("/{id}")
-    @Operation(
-        summary = "Get role by ID",
-        description = "Retrieves the complete role information (id, name, description) for a given role ID."
-    )
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
+    @Operation(summary = "Get role by ID", description = "Retrieves the complete role information (id, name, description) for a given role ID.")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Role found successfully",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = RoleResponse.class),
-                examples = @ExampleObject(
-                    value = """
-                        {
-                          "id": "550e8400-e29b-41d4-a716-446655440000",
-                          "name": "OWNER",
-                          "description": "Restaurant owner"
-                        }
-                        """
-                )
-            )
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Role not found",
-            content = @Content(
-                mediaType = "application/json",
-                examples = @ExampleObject(
-                    value = """
-                        {
-                          "message": "Role not found with id: INVALID_ID"
-                        }
-                        """
-                )
-            )
-        )
+        @ApiResponse(responseCode = "200", description = "Role found successfully", content = @Content(schema = @Schema(implementation = RoleResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Role not found")
     })
     public ResponseEntity<RoleResponse> getRoleById(
         @Parameter(
