@@ -4,6 +4,7 @@ import com.pragma.plazoleta.domain.api.IUserServicePort;
 import com.pragma.plazoleta.domain.api.IRoleServicePort;
 import com.pragma.plazoleta.domain.exception.UserValidationException;
 import com.pragma.plazoleta.domain.model.User;
+import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,11 +28,12 @@ public class UserUseCase implements IUserServicePort {
     private final IRoleServicePort roleServicePort;
     private final PasswordEncoder passwordEncoder;
     private final UserPermissionsService userPermissionsService;
+    private final ISecurityContextPort securityContextPort;
 
     @Override
-    public User createUser(User user, String creatorRoleName) {
+    public User createUser(User user) {
         validateUser(user);
-        String roleToAssign = userPermissionsService.getRoleToAssign(creatorRoleName);
+        String roleToAssign = userPermissionsService.getRoleToAssign(securityContextPort.getRoleOfUserAutenticated());
         UUID roleId = roleServicePort.getRoleIdByName(roleToAssign);
         User userToSave = User.builder()
             .id(UUID.randomUUID())
