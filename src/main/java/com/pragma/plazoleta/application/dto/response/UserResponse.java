@@ -33,4 +33,7 @@ public class UserResponse {
     
     @Schema(description = "User's role ID", example = "660e8400-e29b-41d4-a716-446655440001")
     private String roleId;
+    
+    @Schema(description = "Restaurant ID (present for employees)", example = "550e8400-e29b-41d4-a716-446655440000")
+    private String restaurantId;
 } 

@@ -22,4 +22,5 @@ public class User {
     private String email;
     private String password;
     private UUID roleId;
+    private UUID restaurantId;
 } 

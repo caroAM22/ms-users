@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN restaurant_id CHAR(36); 

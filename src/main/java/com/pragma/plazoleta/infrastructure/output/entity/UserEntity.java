@@ -41,4 +41,7 @@ public class UserEntity {
     
     @Column(name = "role_id", nullable = false, columnDefinition = "CHAR(36)")
     private String roleId;
+    
+    @Column(name = "restaurant_id", columnDefinition = "CHAR(36)")
+    private String restaurantId;
 } 

@@ -53,7 +53,7 @@ public class UserController {
     }
     
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'EMPLOYEE')")
     @Operation(summary = "Get user by ID")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200",description = "User retrieved successfully",content = @Content(schema = @Schema(implementation = UserResponse.class))),

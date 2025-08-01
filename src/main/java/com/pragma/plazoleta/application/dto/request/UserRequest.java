@@ -48,4 +48,7 @@ public class UserRequest {
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
+    
+    @Schema(description = "Restaurant ID (required when owner creates employee)", example = "550e8400-e29b-41d4-a716-446655440000")
+    private String restaurantId;
 } 

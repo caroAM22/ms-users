@@ -20,6 +20,7 @@ import com.pragma.plazoleta.domain.service.UserPermissionsService;
 import static com.pragma.plazoleta.domain.utils.RegexPattern.EMAIL_PATTERN_REQUIRED;
 import static com.pragma.plazoleta.domain.utils.RegexPattern.PHONE_PATTERN_REQUIRED;
 
+
 @Service
 @RequiredArgsConstructor
 public class UserUseCase implements IUserServicePort {
@@ -33,8 +34,12 @@ public class UserUseCase implements IUserServicePort {
     @Override
     public User createUser(User user) {
         validateUser(user);
-        String roleToAssign = userPermissionsService.getRoleToAssign(securityContextPort.getRoleOfUserAutenticated());
+        String creatorRole = securityContextPort.getRoleOfUserAutenticated();
+        String roleToAssign = userPermissionsService.getRoleToAssign(creatorRole);
         UUID roleId = roleServicePort.getRoleIdByName(roleToAssign);
+        if ("OWNER".equals(creatorRole) && "EMPLOYEE".equals(roleToAssign) && user.getRestaurantId() == null) {
+            throw new UserValidationException("restaurantId is required for employees created by owner");
+        }
         User userToSave = User.builder()
             .id(UUID.randomUUID())
             .name(user.getName())
@@ -45,6 +50,7 @@ public class UserUseCase implements IUserServicePort {
             .email(user.getEmail())
             .password(passwordEncoder.encode(user.getPassword()))
             .roleId(roleId)
+            .restaurantId(user.getRestaurantId())
             .build();
         return userPersistencePort.saveUser(userToSave);
     }
