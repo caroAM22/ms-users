@@ -1,7 +1,8 @@
-package com.pragma.plazoleta.infrastructure.output.mapper;
+package com.pragma.plazoleta.infrastructure.output.jpa.mapper;
 
 import com.pragma.plazoleta.domain.model.Role;
-import com.pragma.plazoleta.infrastructure.output.entity.RoleEntity;
+import com.pragma.plazoleta.infrastructure.output.jpa.entity.RoleEntity;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 

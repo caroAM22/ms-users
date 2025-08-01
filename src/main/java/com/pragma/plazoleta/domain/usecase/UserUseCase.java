@@ -6,6 +6,7 @@ import com.pragma.plazoleta.domain.exception.UserValidationException;
 import com.pragma.plazoleta.domain.model.User;
 import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
+import com.pragma.plazoleta.domain.spi.IPlazaValidationPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class UserUseCase implements IUserServicePort {
     private final PasswordEncoder passwordEncoder;
     private final UserPermissionsService userPermissionsService;
     private final ISecurityContextPort securityContextPort;
+    private final IPlazaValidationPort plazaValidationPort;
 
     @Override
     public User createUser(User user) {
@@ -37,9 +39,7 @@ public class UserUseCase implements IUserServicePort {
         String creatorRole = securityContextPort.getRoleOfUserAutenticated();
         String roleToAssign = userPermissionsService.getRoleToAssign(creatorRole);
         UUID roleId = roleServicePort.getRoleIdByName(roleToAssign);
-        if ("OWNER".equals(creatorRole) && "EMPLOYEE".equals(roleToAssign) && user.getRestaurantId() == null) {
-            throw new UserValidationException("restaurantId is required for employees created by owner");
-        }
+        validateRestaurantForEmployee(creatorRole, roleToAssign, user.getRestaurantId());
         User userToSave = User.builder()
             .id(UUID.randomUUID())
             .name(user.getName())
@@ -136,6 +136,20 @@ public class UserUseCase implements IUserServicePort {
         
         if (!EMAIL_PATTERN_REQUIRED.matcher(email).matches()) {
             throw new UserValidationException("Email must have a valid format: something@domain.com");
+        }
+    }
+    
+    private void validateRestaurantForEmployee(String creatorRole, String roleToAssign, UUID restaurantId) {
+        if ("OWNER".equals(creatorRole) && "EMPLOYEE".equals(roleToAssign)) {
+            if (restaurantId == null) {
+                throw new UserValidationException("restaurantId is required for employees created by owner");
+            }
+            
+            if (!plazaValidationPort.getRestaurantById(restaurantId)) {
+                throw new UserValidationException("Restaurant with id " + restaurantId + " does not exist");
+            }
+        } else if(restaurantId != null) {
+            throw new UserValidationException("restaurantId is not allowed for " + roleToAssign + " created by " + creatorRole);
         }
     }
 } 

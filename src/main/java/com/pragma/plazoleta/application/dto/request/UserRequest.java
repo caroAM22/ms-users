@@ -50,5 +50,7 @@ public class UserRequest {
     private String password;
     
     @Schema(description = "Restaurant ID (required when owner creates employee)", example = "550e8400-e29b-41d4-a716-446655440000")
+    @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", 
+             message = "Restaurant ID must be a valid UUID format")
     private String restaurantId;
 } 

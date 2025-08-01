@@ -1,13 +1,12 @@
 package com.pragma.plazoleta.infrastructure.service;
 
 import com.pragma.plazoleta.infrastructure.exception.InvalidTokenException;
+import com.pragma.plazoleta.infrastructure.output.jpa.entity.UserEntity;
 import com.pragma.plazoleta.infrastructure.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
-import com.pragma.plazoleta.infrastructure.output.entity.UserEntity;
-
 
 import java.util.Map;
 

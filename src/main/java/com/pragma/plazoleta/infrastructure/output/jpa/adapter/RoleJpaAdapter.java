@@ -1,9 +1,10 @@
-package com.pragma.plazoleta.infrastructure.output.adapter;
+package com.pragma.plazoleta.infrastructure.output.jpa.adapter;
 
 import com.pragma.plazoleta.domain.model.Role;
 import com.pragma.plazoleta.domain.spi.IRolePersistencePort;
-import com.pragma.plazoleta.infrastructure.output.mapper.IRoleEntityMapper;
-import com.pragma.plazoleta.infrastructure.output.repository.IRoleRepository;
+import com.pragma.plazoleta.infrastructure.output.jpa.mapper.IRoleEntityMapper;
+import com.pragma.plazoleta.infrastructure.output.jpa.repository.IRoleRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

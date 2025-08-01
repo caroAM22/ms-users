@@ -1,4 +1,4 @@
-package com.pragma.plazoleta.infrastructure.output.adapter;
+package com.pragma.plazoleta.infrastructure.output.jpa.adapter;
 
 import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.infrastructure.exception.InvalidTokenException;

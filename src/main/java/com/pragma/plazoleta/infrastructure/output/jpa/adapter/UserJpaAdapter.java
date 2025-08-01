@@ -1,10 +1,11 @@
-package com.pragma.plazoleta.infrastructure.output.adapter;
+package com.pragma.plazoleta.infrastructure.output.jpa.adapter;
 
 import com.pragma.plazoleta.domain.model.User;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
-import com.pragma.plazoleta.infrastructure.output.entity.UserEntity;
-import com.pragma.plazoleta.infrastructure.output.mapper.IUserEntityMapper;
-import com.pragma.plazoleta.infrastructure.output.repository.IUserRepository;
+import com.pragma.plazoleta.infrastructure.output.jpa.entity.UserEntity;
+import com.pragma.plazoleta.infrastructure.output.jpa.mapper.IUserEntityMapper;
+import com.pragma.plazoleta.infrastructure.output.jpa.repository.IUserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

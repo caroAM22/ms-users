@@ -1,6 +1,17 @@
 server:
   port: 8081
 
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+
+ms-plaza:
+  url: ${MS_PLAZA_URL}
+
 spring:
   datasource:
     url: ${DB_URL}

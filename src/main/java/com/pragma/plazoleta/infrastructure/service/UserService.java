@@ -1,9 +1,10 @@
 package com.pragma.plazoleta.infrastructure.service;
 
 import com.pragma.plazoleta.infrastructure.exception.AuthenticationException;
-import com.pragma.plazoleta.infrastructure.output.entity.UserEntity;
-import com.pragma.plazoleta.infrastructure.output.repository.IUserRepository;
-import com.pragma.plazoleta.infrastructure.output.repository.IRoleRepository;
+import com.pragma.plazoleta.infrastructure.output.jpa.entity.UserEntity;
+import com.pragma.plazoleta.infrastructure.output.jpa.repository.IRoleRepository;
+import com.pragma.plazoleta.infrastructure.output.jpa.repository.IUserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

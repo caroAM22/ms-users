@@ -1,6 +1,6 @@
 package com.pragma.plazoleta.infrastructure.security;
 
-import com.pragma.plazoleta.infrastructure.output.entity.UserEntity;
+import com.pragma.plazoleta.infrastructure.output.jpa.entity.UserEntity;
 import com.pragma.plazoleta.infrastructure.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

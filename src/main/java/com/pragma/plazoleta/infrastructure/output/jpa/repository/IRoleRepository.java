@@ -1,9 +1,10 @@
-package com.pragma.plazoleta.infrastructure.output.repository;
+package com.pragma.plazoleta.infrastructure.output.jpa.repository;
 
-import com.pragma.plazoleta.infrastructure.output.entity.RoleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import com.pragma.plazoleta.infrastructure.output.jpa.entity.RoleEntity;
 
 import java.util.Optional;
 

@@ -7,6 +7,7 @@ import com.pragma.plazoleta.domain.exception.ForbiddenOperationException;
 import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
 import com.pragma.plazoleta.domain.model.User;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
+import com.pragma.plazoleta.domain.spi.IPlazaValidationPort;
 import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.service.UserPermissionsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -45,6 +47,9 @@ class UserUseCaseTest {
     @Mock
     private ISecurityContextPort securityContextPort;
 
+    @Mock
+    private IPlazaValidationPort plazaValidationPort;
+
     @InjectMocks
     private UserUseCase userUseCase;
 
@@ -63,6 +68,9 @@ class UserUseCaseTest {
         validUser.setBirthDate(LocalDate.of(1990, 1, 15));
         validUser.setEmail("john.doe@example.com");
         validUser.setPassword("SecurePassword123!");
+
+        Mockito.reset(userPersistencePort, roleServicePort, passwordEncoder, 
+                      userPermissionsService, securityContextPort, plazaValidationPort);
     }
 
     private void setupValidUserMocks() {
@@ -429,6 +437,7 @@ class UserUseCaseTest {
         when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
         when(userPermissionsService.getRoleToAssign("OWNER")).thenReturn("EMPLOYEE");
         when(roleServicePort.getRoleIdByName("EMPLOYEE")).thenReturn(employeeRoleId);
+        when(plazaValidationPort.getRestaurantById(restaurantId)).thenReturn(true);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
         when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
         when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
@@ -441,6 +450,44 @@ class UserUseCaseTest {
         assertEquals(employeeRoleId, result.getRoleId());
         verify(userPermissionsService).getRoleToAssign("OWNER");
         verify(roleServicePort).getRoleIdByName("EMPLOYEE");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenOwnerProvidesInvalidRestaurantId() {
+        UUID restaurantId = UUID.randomUUID();
+        validUser.setRestaurantId(restaurantId);
+        
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
+        when(userPermissionsService.getRoleToAssign("OWNER")).thenReturn("EMPLOYEE");
+        when(plazaValidationPort.getRestaurantById(restaurantId)).thenReturn(false);
+        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
+        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
+        
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+        
+        assertEquals("Restaurant with id " + restaurantId + " does not exist", exception.getMessage());
+        verify(securityContextPort).getRoleOfUserAutenticated();
+        verify(userPermissionsService).getRoleToAssign("OWNER");
+        verify(plazaValidationPort).getRestaurantById(restaurantId);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAdminCreatesOwnerWithRestaurantId() {
+        UUID restaurantId = UUID.randomUUID();
+        validUser.setRestaurantId(restaurantId);
+
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
+        when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
+        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
+
+        UserValidationException exception = assertThrows(UserValidationException.class, 
+            () -> userUseCase.createUser(validUser));
+        
+        assertEquals("restaurantId is not allowed for OWNER created by ADMIN", exception.getMessage());
+        verify(securityContextPort).getRoleOfUserAutenticated();
+        verify(userPermissionsService).getRoleToAssign("ADMIN");
+        verify(roleServicePort).getRoleIdByName("OWNER");
     }
 
     @Test
@@ -457,27 +504,6 @@ class UserUseCaseTest {
         
         assertNotNull(result);
         assertNull(result.getRestaurantId()); 
-        assertEquals(ownerRoleId, result.getRoleId());
-        verify(userPermissionsService).getRoleToAssign("ADMIN");
-    }
-
-    @Test
-    void shouldAllowAdminToCreateOwnerWithRestaurantId() {
-        UUID restaurantId = UUID.randomUUID();
-        validUser.setRestaurantId(restaurantId);
-        
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
-        when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
-        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
-        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
-        when(userPersistencePort.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        User result = userUseCase.createUser(validUser);
-        
-        assertNotNull(result);
-        assertEquals(restaurantId, result.getRestaurantId()); 
         assertEquals(ownerRoleId, result.getRoleId());
         verify(userPermissionsService).getRoleToAssign("ADMIN");
     }

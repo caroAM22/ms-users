@@ -1,4 +1,4 @@
-package com.pragma.plazoleta.infrastructure.output.entity;
+package com.pragma.plazoleta.infrastructure.output.jpa.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
