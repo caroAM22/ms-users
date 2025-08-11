@@ -9,6 +9,7 @@ import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.service.UserPermissionsService;
 import com.pragma.plazoleta.domain.spi.IUserValidationPort;
+import com.pragma.plazoleta.domain.spi.IPasswordEncoderPort;
 import com.pragma.plazoleta.domain.validation.ValidationResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -37,7 +37,7 @@ class UserUseCaseTest {
     private IRoleServicePort roleServicePort;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private IPasswordEncoderPort passwordEncoder;
 
     @Mock
     private UserPermissionsService userPermissionsService;

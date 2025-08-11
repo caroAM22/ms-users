@@ -9,12 +9,14 @@ import com.pragma.plazoleta.domain.api.IUserServicePort;
 import com.pragma.plazoleta.domain.service.UserPermissionsService;
 import com.pragma.plazoleta.domain.service.UserValidationService;
 import com.pragma.plazoleta.domain.spi.IUserValidationPort;
+import com.pragma.plazoleta.domain.spi.IPasswordEncoderPort;
 import com.pragma.plazoleta.domain.spi.IPlazaValidationPort;
 import com.pragma.plazoleta.domain.spi.IRolePersistencePort;
 import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import com.pragma.plazoleta.domain.usecase.RoleUseCase;
 import com.pragma.plazoleta.domain.usecase.UserUseCase;
+import com.pragma.plazoleta.infrastructure.output.adapter.PasswordEncoderAdapter;
 import com.pragma.plazoleta.infrastructure.output.jpa.adapter.RoleJpaAdapter;
 import com.pragma.plazoleta.infrastructure.output.jpa.adapter.SecurityContextAdapter;
 import com.pragma.plazoleta.infrastructure.output.jpa.adapter.UserJpaAdapter;
@@ -43,6 +45,11 @@ public class BeanConfiguration {
     @Bean
     public UserPermissionsService userPermissionsService() {
         return new UserPermissionsService();
+    }
+
+    @Bean
+    public IPasswordEncoderPort passwordEncoderPort(PasswordEncoder passwordEncoder) {
+        return new PasswordEncoderAdapter(passwordEncoder);
     }
 
     @Bean
@@ -80,7 +87,7 @@ public class BeanConfiguration {
         return new UserUseCase(
             userPersistencePort(),
             roleServicePort(),
-            passwordEncoder,
+            passwordEncoderPort(passwordEncoder),
             userPermissionsService(),
             securityContextPort(),
             userValidationPort()

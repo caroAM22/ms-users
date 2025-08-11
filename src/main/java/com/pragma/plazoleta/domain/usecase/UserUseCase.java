@@ -7,10 +7,10 @@ import com.pragma.plazoleta.domain.model.User;
 import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import com.pragma.plazoleta.domain.spi.IUserValidationPort;
+import com.pragma.plazoleta.domain.spi.IPasswordEncoderPort;
 import com.pragma.plazoleta.domain.service.UserPermissionsService;
 import com.pragma.plazoleta.domain.validation.ValidationResult;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +20,7 @@ public class UserUseCase implements IUserServicePort {
     
     private final IUserPersistencePort userPersistencePort;
     private final IRoleServicePort roleServicePort;
-    private final PasswordEncoder passwordEncoder;
+    private final IPasswordEncoderPort passwordEncoder;
     private final UserPermissionsService userPermissionsService;
     private final ISecurityContextPort securityContextPort;
     private final IUserValidationPort userValidationPort;
