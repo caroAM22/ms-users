@@ -4,13 +4,10 @@ import com.pragma.plazoleta.domain.api.IRoleServicePort;
 import com.pragma.plazoleta.domain.model.Role;
 import com.pragma.plazoleta.domain.spi.IRolePersistencePort;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
 
-
-@Service
 @RequiredArgsConstructor
 public class RoleUseCase implements IRoleServicePort {
     

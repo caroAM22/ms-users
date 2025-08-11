@@ -1,19 +1,17 @@
 package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.api.IRoleServicePort;
-import com.pragma.plazoleta.domain.exception.UserValidationException;
 import com.pragma.plazoleta.domain.exception.UserNotFoundException;
 import com.pragma.plazoleta.domain.exception.ForbiddenOperationException;
 import com.pragma.plazoleta.domain.exception.RoleNotFoundException;
 import com.pragma.plazoleta.domain.model.User;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
-import com.pragma.plazoleta.domain.spi.IPlazaValidationPort;
 import com.pragma.plazoleta.domain.spi.ISecurityContextPort;
 import com.pragma.plazoleta.domain.service.UserPermissionsService;
+import com.pragma.plazoleta.domain.spi.IUserValidationPort;
+import com.pragma.plazoleta.domain.validation.ValidationResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -48,7 +46,7 @@ class UserUseCaseTest {
     private ISecurityContextPort securityContextPort;
 
     @Mock
-    private IPlazaValidationPort plazaValidationPort;
+    private IUserValidationPort userValidationPort;
 
     @InjectMocks
     private UserUseCase userUseCase;
@@ -70,7 +68,7 @@ class UserUseCaseTest {
         validUser.setPassword("SecurePassword123!");
 
         Mockito.reset(userPersistencePort, roleServicePort, passwordEncoder, 
-                      userPermissionsService, securityContextPort, plazaValidationPort);
+                      userPermissionsService, securityContextPort, userValidationPort);
     }
 
     private void setupValidUserMocks() {
@@ -78,8 +76,8 @@ class UserUseCaseTest {
         when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
         when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
+        when(userValidationPort.validateUser(validUser)).thenReturn(ValidationResult.success());
+        when(userValidationPort.validateRestaurantForEmployee("ADMIN", "OWNER", null)).thenReturn(ValidationResult.success());
         when(userPersistencePort.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
@@ -99,188 +97,42 @@ class UserUseCaseTest {
 
     @Test
     void shouldCreateSuccessfullyWhenValidUser() {
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
-        when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
-        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
-        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
-        when(userPersistencePort.saveUser(any())).thenReturn(validUser);
+        setupValidUserMocks();
 
         User result = userUseCase.createUser(validUser);
 
         assertNotNull(result);
         assertEquals(validUser.getName(), result.getName());
-        assertEquals(validUser.getPassword(), result.getPassword());
-        assertEquals(validUser.getRoleId(), result.getRoleId());
+        assertEquals("encodedPassword", result.getPassword());
+        assertEquals(ownerRoleId, result.getRoleId());
+        verify(userValidationPort).validateUser(validUser);
     }
 
     @Test
-    void shouldThrowExceptionWhenUserUnder18() {
-        LocalDate birthDate17Years = LocalDate.now().minusYears(17).plusDays(1);
-        validUser.setBirthDate(birthDate17Years);
+    void shouldThrowExceptionWhenUserValidationFails() {
+        when(userValidationPort.validateUser(validUser))
+            .thenReturn(ValidationResult.failure("Validation failed"));
 
-        UserValidationException exception = assertThrows(UserValidationException.class, 
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
             () -> userUseCase.createUser(validUser));
 
-        assertEquals("User must be at least 18 years old", exception.getMessage());
+        assertEquals("Validation failed", exception.getMessage());
+        verify(userValidationPort).validateUser(validUser);
     }
 
     @Test
-    void shouldNotThrowExceptionWhenUserExactly18() {
-        LocalDate birthDate18Years = LocalDate.now().minusYears(18);
-        validUser.setBirthDate(birthDate18Years);
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
-        when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
-        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
-        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
-        when(userPersistencePort.saveUser(any())).thenReturn(validUser);
+    void shouldThrowExceptionWhenRestaurantValidationFails() {
+        when(userValidationPort.validateUser(validUser)).thenReturn(ValidationResult.success());
+        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
+        when(userPermissionsService.getRoleToAssign("OWNER")).thenReturn("EMPLOYEE");
+        when(userValidationPort.validateRestaurantForEmployee("OWNER", "EMPLOYEE", null))
+            .thenReturn(ValidationResult.failure("restaurantId is required for employees created by owner"));
 
-        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
-    }
-
-    @Test
-    void shouldNotThrowExceptionWhenUserOlderThan18() {
-        LocalDate birthDate25Years = LocalDate.now().minusYears(25);
-        validUser.setBirthDate(birthDate25Years);
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
-        when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
-        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
-        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
-        when(userPersistencePort.saveUser(any())).thenReturn(validUser);
-
-        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenFutureBirthDate() {
-        LocalDate futureBirthDate = LocalDate.now().plusYears(1);
-        validUser.setBirthDate(futureBirthDate);
-
-        UserValidationException exception = assertThrows(UserValidationException.class, 
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
             () -> userUseCase.createUser(validUser));
 
-        assertEquals("User must be at least 18 years old", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "invalid-email",
-        "invalid-mail@", 
-        "invalid-mail@gmailcom",
-        "test@",
-        "@gmail.com",
-        "test..test@gmail.com",
-        "test@.com",
-        "test@gmail.",
-        "test@gmail..com",
-        "test@test@test.com",
-        "test@.test.com"
-    })
-    void shouldThrowExceptionWhenInvalidEmail(String invalidEmail) {
-        validUser.setEmail(invalidEmail);
-
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser));
-
-        assertEquals("Email must have a valid format: something@domain.com", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "valid-mail@gmail.com",
-        "test@example.com",
-        "user.name@domain.co.uk",
-        "user+tag@example.org",
-        "123@numbers.com"
-    })
-    void shouldNotThrowExceptionWhenValidEmail(String validEmail) {
-        validUser.setEmail(validEmail);
-        setupValidUserMocks();
-
-        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenEmailIsEmpty() {
-        validUser.setEmail("");
-        UserValidationException exception = assertThrows(UserValidationException.class,
-            () -> userUseCase.createUser(validUser));
-        assertEquals("Email is required", exception.getMessage());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenBirthDateIsNull() {
-        validUser.setBirthDate(null);
-        UserValidationException exception = assertThrows(UserValidationException.class,
-            () -> userUseCase.createUser(validUser));
-        assertEquals("Birth date is required", exception.getMessage());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenPhoneExceedsLength() {
-        validUser.setPhone("12345678901234"); 
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser));
-        assertEquals("Phone number cannot exceed 13 characters", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "123+456789",  
-        "abc123def",       
-        "123-456-7890",     
-        "123abc456",      
-        "phone123",      
-        "123@456"        
-    })
-    void shouldThrowExceptionWhenPhoneHasInvalidFormat(String invalidPhone) {
-        validUser.setPhone(invalidPhone);
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser));
-        assertEquals("Phone number must contain only digits and optionally start with +", exception.getMessage());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenPhoneIsEmpty() {
-        validUser.setPhone("");
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser));
-        assertEquals("Phone number is required", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "1",                
-        "1234567890123",   
-        "+123456789123",
-        "123456"  
-    })
-    void shouldNotThrowExceptionWhenValidPhone(String validPhone) {
-        validUser.setPhone(validPhone);
-        setupValidUserMocks();
-
-        assertDoesNotThrow(() -> userUseCase.createUser(validUser));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenEmailExists() {
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(true);
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser));
-        assertEquals("Email already exists", exception.getMessage());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenDocumentExists() {
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(true);
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser));
-        assertEquals("Document number already exists", exception.getMessage());
+        assertEquals("restaurantId is required for employees created by owner", exception.getMessage());
+        verify(userValidationPort).validateRestaurantForEmployee("OWNER", "EMPLOYEE", null);
     }
 
     @Test
@@ -327,7 +179,6 @@ class UserUseCaseTest {
 
     @Test
     void shouldReturnEmptyListWhenNoUsersExist() {
-
         when(userPersistencePort.getAllUsers()).thenReturn(Collections.emptyList());
 
         List<User> actualUsers = userUseCase.getAllUsers();
@@ -341,22 +192,21 @@ class UserUseCaseTest {
     void employeeCannotCreateUser() {
         when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("EMPLOYEE");
         when(userPermissionsService.getRoleToAssign("EMPLOYEE")).thenThrow(new ForbiddenOperationException());
+        when(userValidationPort.validateUser(validUser)).thenReturn(ValidationResult.success());
+        
         assertThrows(ForbiddenOperationException.class, () ->
             userUseCase.createUser(validUser)
         );
         verify(userPermissionsService).getRoleToAssign("EMPLOYEE");
     }
 
-
     @Test
     void shouldRegisterUserSuccessfullyWithCustomerRole() {
         UUID customerRoleId = UUID.fromString("660e8400-e29b-41d4-a716-446655440003");
         when(roleServicePort.getRoleIdByName("CUSTOMER")).thenReturn(customerRoleId);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
+        when(userValidationPort.validateUser(validUser)).thenReturn(ValidationResult.success());
         when(userPersistencePort.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
 
         User result = userUseCase.registerUser(validUser);
 
@@ -368,11 +218,13 @@ class UserUseCaseTest {
         verify(roleServicePort).getRoleIdByName("CUSTOMER");
         verify(passwordEncoder).encode(validUser.getPassword());
         verify(userPersistencePort).saveUser(any(User.class));
+        verify(userValidationPort).validateUser(validUser);
     }
 
     @Test
     void shouldThrowRoleNotFoundExceptionWhenCustomerRoleDoesNotExist() {
         when(roleServicePort.getRoleIdByName("CUSTOMER")).thenThrow(new RoleNotFoundException());
+        when(userValidationPort.validateUser(validUser)).thenReturn(ValidationResult.success());
 
         RoleNotFoundException exception = assertThrows(RoleNotFoundException.class, 
             () -> userUseCase.registerUser(validUser));
@@ -382,146 +234,14 @@ class UserUseCaseTest {
     }
 
     @Test
-    void shouldValidateUserDataWhenRegistering() {
-        validUser.setEmail("invalid-email");
-        
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.registerUser(validUser));
-        
-        assertEquals("Email must have a valid format: something@domain.com", exception.getMessage());
-    }
+    void shouldThrowExceptionWhenUserValidationFailsDuringRegistration() {
+        when(userValidationPort.validateUser(validUser))
+            .thenReturn(ValidationResult.failure("Email already exists"));
 
-    @Test
-    void shouldThrowExceptionWhenEmailExistsDuringRegistration() {
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(true);
-
-        UserValidationException exception = assertThrows(UserValidationException.class, 
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
             () -> userUseCase.registerUser(validUser));
         
         assertEquals("Email already exists", exception.getMessage());
-        verify(userPersistencePort).existsByEmail(validUser.getEmail());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenDocumentExistsDuringRegistration() {
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(true);
-
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.registerUser(validUser));
-        
-        assertEquals("Document number already exists", exception.getMessage());
-        verify(userPersistencePort).existsByEmail(validUser.getEmail());
-        verify(userPersistencePort).existsByDocumentNumber(validUser.getDocumentNumber());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenOwnerCreatesEmployeeWithoutRestaurantId() {
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
-        when(userPermissionsService.getRoleToAssign("OWNER")).thenReturn("EMPLOYEE");
-
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser));
-        
-        assertEquals("restaurantId is required for employees created by owner", exception.getMessage());
-        verify(securityContextPort).getRoleOfUserAutenticated();
-        verify(userPermissionsService).getRoleToAssign("OWNER");
-    }
-
-    @Test
-    void shouldCreateEmployeeSuccessfullyWhenOwnerProvidesRestaurantId() {
-        UUID employeeRoleId = UUID.randomUUID();
-        UUID restaurantId = UUID.randomUUID();
-        validUser.setRestaurantId(restaurantId);
-        
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
-        when(userPermissionsService.getRoleToAssign("OWNER")).thenReturn("EMPLOYEE");
-        when(roleServicePort.getRoleIdByName("EMPLOYEE")).thenReturn(employeeRoleId);
-        when(plazaValidationPort.getRestaurantById(restaurantId)).thenReturn(true);
-        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
-        when(userPersistencePort.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        User result = userUseCase.createUser(validUser);
-        
-        assertNotNull(result);
-        assertEquals(restaurantId, result.getRestaurantId());
-        assertEquals(employeeRoleId, result.getRoleId());
-        verify(userPermissionsService).getRoleToAssign("OWNER");
-        verify(roleServicePort).getRoleIdByName("EMPLOYEE");
-    }
-
-    @Test
-    void shouldThrowExceptionWhenOwnerProvidesInvalidRestaurantId() {
-        UUID restaurantId = UUID.randomUUID();
-        validUser.setRestaurantId(restaurantId);
-        
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("OWNER");
-        when(userPermissionsService.getRoleToAssign("OWNER")).thenReturn("EMPLOYEE");
-        when(plazaValidationPort.getRestaurantById(restaurantId)).thenReturn(false);
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
-        
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser));
-        
-        assertEquals("Restaurant with id " + restaurantId + " does not exist", exception.getMessage());
-        verify(securityContextPort).getRoleOfUserAutenticated();
-        verify(userPermissionsService).getRoleToAssign("OWNER");
-        verify(plazaValidationPort).getRestaurantById(restaurantId);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenAdminCreatesOwnerWithRestaurantId() {
-        UUID restaurantId = UUID.randomUUID();
-        validUser.setRestaurantId(restaurantId);
-
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
-        when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
-        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
-
-        UserValidationException exception = assertThrows(UserValidationException.class, 
-            () -> userUseCase.createUser(validUser));
-        
-        assertEquals("restaurantId is not allowed for OWNER created by ADMIN", exception.getMessage());
-        verify(securityContextPort).getRoleOfUserAutenticated();
-        verify(userPermissionsService).getRoleToAssign("ADMIN");
-        verify(roleServicePort).getRoleIdByName("OWNER");
-    }
-
-    @Test
-    void shouldAllowAdminToCreateOwnerWithoutRestaurantId() {
-        when(securityContextPort.getRoleOfUserAutenticated()).thenReturn("ADMIN");
-        when(userPermissionsService.getRoleToAssign("ADMIN")).thenReturn("OWNER");
-        when(roleServicePort.getRoleIdByName("OWNER")).thenReturn(ownerRoleId);
-        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
-        when(userPersistencePort.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        User result = userUseCase.createUser(validUser);
-        
-        assertNotNull(result);
-        assertNull(result.getRestaurantId()); 
-        assertEquals(ownerRoleId, result.getRoleId());
-        verify(userPermissionsService).getRoleToAssign("ADMIN");
-    }
-
-    @Test
-    void shouldNotRequireRestaurantIdForCustomerRegistration() {
-        UUID customerRoleId = UUID.fromString("660e8400-e29b-41d4-a716-446655440003");
-        when(roleServicePort.getRoleIdByName("CUSTOMER")).thenReturn(customerRoleId);
-        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(userPersistencePort.existsByEmail(validUser.getEmail())).thenReturn(false);
-        when(userPersistencePort.existsByDocumentNumber(validUser.getDocumentNumber())).thenReturn(false);
-        when(userPersistencePort.saveUser(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        User result = userUseCase.registerUser(validUser);
-
-        assertNotNull(result);
-        assertNull(result.getRestaurantId()); 
-        assertEquals(customerRoleId, result.getRoleId());
-        verify(roleServicePort).getRoleIdByName("CUSTOMER");
+        verify(userValidationPort).validateUser(validUser);
     }
 } 
